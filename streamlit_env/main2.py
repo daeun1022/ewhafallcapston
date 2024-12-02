@@ -11,22 +11,23 @@ def navigate_to(page):
     st.session_state['page'] = page
     st.rerun()
     
-# configuring openai - api key
+# openai key 갖고오기
 working_dir = os.path.dirname(os.path.abspath(__file__))
 config_data = json.load(open(f"{working_dir}/config.json"))
 OPENAI_API_KEY = config_data["OPENAI_API_KEY"]
 openai.api_key = OPENAI_API_KEY
 
-# configuring streamlit page settings
+# 페이지 세팅
 st.set_page_config(
     page_title="Chatbot Site",
     layout="centered"
 )
 
-# initialize chat session in streamlit if not already present
+# 대화 내용 유지
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
     
+# 디자인
 st.markdown(
     """
 <style>
@@ -48,28 +49,28 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-    # 메인 페이지 내용 정의
+# 메인 페이지 내용 정의
 def main_page():
     if st.button('일기 작성하러 가기'):
         navigate_to('sub')
 
-    # streamlit page title
+    # 페이지 타이틀
     st.title("EmotionBot Diary")
 
-    # display chat history
+    # 채팅 기록 보여죽 
     for message in st.session_state.chat_history:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # input field for user's message
+    # 채팅창
     user_prompt = st.chat_input("하고싶은 말을 적어주세요")
 
     if user_prompt:
-        # add user's message to chat and display it
+        # 유저의 입력을 받기
         st.chat_message("user").markdown(user_prompt)
         st.session_state.chat_history.append({"role": "user", "content": user_prompt})
 
-        # send user's message to GPT-4o and get a response
+        # ai prompt 내용
         response = openai.chat.completions.create(
             model="gpt-4o",
             messages=[
@@ -93,7 +94,7 @@ def main_page():
         assistant_response = response.choices[0].message.content
         st.session_state.chat_history.append({"role": "assistant", "content": assistant_response})
 
-        # display GPT-4o's response
+        # 챗봇의 답장칸
         with st.chat_message("assistant"):
             st.markdown(assistant_response)
             
