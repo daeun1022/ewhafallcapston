@@ -121,7 +121,7 @@ def summarize_conversation(chat_history):
 # 서브 페이지 내용 정의
 def sub_page():
     st.title('일기 페이지')
-    st.write('챗봇과의 대화 내용을 기반으로 일기가 작성됩니다')
+    st.write('챗봇과의 대화 내용을 기반으로 일기가 작성됩니다.')
     if st.button('대화 다시보기'):
         navigate_to('main')
     
