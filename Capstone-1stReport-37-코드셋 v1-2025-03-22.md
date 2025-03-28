@@ -29,7 +29,7 @@
 # Project-Design & Implementation
 | 항목 | 내용 |
 |:---  |---  |
-| (1) 요구사항 정의 | <img src=https://github.com/daeun1022/ewhafallcapston/blob/main/E-R%EB%8B%A4%EC%9D%B4%EC%96%B4%EA%B7%B8%EB%9E%A8.png/> *프로젝트를 완성하기 위해 필요한 요구사항을 설명하기에 가장 적합한 방법을 선택하여 기술* <br> 예) <br> - 기능별 상세 요구사항(또는 유스케이스) <br> - 설계 모델(클래스 다이어그램, 클래스 및 모듈 명세서) <br> - UI 분석/설계 모델 <br> - E-R 다이어그램/DB 설계 모델(테이블 구조) |
+| (1) 요구사항 정의 | <img src=https://github.com/daeun1022/ewhafallcapston/blob/main/E-R%EB%8B%A4%EC%9D%B4%EC%96%B4%EA%B7%B8%EB%9E%A8.png/> <img src=https://github.com/daeun1022/ewhafallcapston/blob/main/%EA%B8%B0%EB%8A%A5%EB%B3%84%EC%83%81%EC%84%B8%EC%9A%94%EA%B5%AC%EC%82%AC%ED%95%AD.png> |
 | (2) 전체 시스템 구성 | *프로젝트를 위하여, SW 전체 시스템의 구조를 보인다. (가능하다면, 사용자도 포함) <br> 주요 SW 모듈을 보이고, 각각의 역할을 기술한다. <br>만약, 오픈소스 혹은 외부 모듈을 사용한다면 이또한 기술한다.* |
 | (3) 주요엔진 및 기능 설계 | **1.AI 챗봇 (GPT-4 API 사용)** <br><li> 입력: 사용자의 채팅 텍스트 <br><li> 처리: GPT-4 API를 호출하여 문맥을 파악하고 자연스럽게 대화 진행 <br><li> 출력: 공감형 대화 응답 제공 <br><br> **2.대화 요약 AI (GPT-4 API 사용)** <br><li> 입력: 사용자의 전체 채팅 로그 <br><li> 처리: GPT-4 API를 이용해 요약된 일기 형식으로 변환 <br><li> 출력: 일기 형태의 텍스트 반환 <br><br> **3.감정 분석 AI (GPT-4 API 사용)** <br><li> 입력: 사용자 채팅 텍스트 <br><li> 처리: 감정 분석 API를 호출하여 감정을 점수화 <br><li> 출력: 감정 점수 (예: 긍정 0.8, 부정 0.2) <br><br> **4.데이터 저장 및 관리 (Firebase)** <br><li> 사용자 계정 정보 저장 (이메일, 비밀번호) <br><li> 일기 및 감정 분석 데이터 저장 <br><li> 날짜별 감정 점수 저장 <br><br> **5.감정 시각화 및 캘린더 UI** <br><li> 감정 점수를 기반으로 날짜별 대표 감정을 이모티콘으로 표시 <br><li> 감정 점수 변화를 그래프로 시각화 <br><li> 특정 날짜 클릭 시 해당 일기 및 감정 분석 결과를 조회 |
 | (4) 주요 기능의 구현 | *<주요기능리스트>에 정의된 기능 중 최소 2개 이상에 대한 상세 구현내용을 기술한다.* |
