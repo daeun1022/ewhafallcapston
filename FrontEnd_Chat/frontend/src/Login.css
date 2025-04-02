@@ -1,0 +1,87 @@
+.login-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+    position: relative;
+  }
+  
+  .form-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* ✅ 라벨 왼쪽 정렬 */
+    margin-top: 22vh;         /* ✅ 화면 위로 당기기 */
+    width: fit-content;
+  }
+  
+  .login-title {
+    font-size: 2rem;
+    font-weight: bold;
+    text-align: center;
+    align-self: center;       /* ✅ 제목만 가운데 */
+    margin-bottom: 1.5rem;
+  }
+  
+  .login-container .form-wrapper label {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .login-input {
+    width: 300px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    border: 2px solid black;
+    border-radius: 2rem;
+    outline: none;
+    transition: border-color 0.2s, border-width 0.2s;
+  }
+  
+  .login-input:focus {
+    border-color: green;
+    border-width: 3px;
+  }
+
+  .login-button {
+    margin-top: 1.5rem;
+    padding: 0.75rem 2rem;
+    background-color: #28a745; /* 연한 초록 */
+    color: white;
+    font-size: 1rem;
+    border: none;
+    border-radius: 1rem;
+    cursor: pointer;
+    align-self: center; /* ✅ 가운데 정렬 */
+    transition: background-color 0.3s ease;
+  }
+  
+  .login-button:hover {
+    background-color: #1e7e34; /* 진한 초록 */
+  }
+
+  .login-input, .login-button {
+    box-sizing: border-box;
+  }
+  
+  .bottom-links {
+    position: absolute;
+    bottom: 40px;
+    display: flex;
+    gap: 2rem;
+  }
+  
+  .bottom-links button {
+    background: none;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  
+  .bottom-links button:hover {
+    color: green;
+  }
+  

@@ -6,6 +6,7 @@ import { useNavigate, BrowserRouter, Routes, Route } from "react-router-dom";
 import "./App.css";
 import DiaryPage from "./Diary";
 import CalendarPage from "./Calendar";
+import LoginPage from "./Login";
 
 const moodIcons = {
   happy: <Smile className="icon" />,
@@ -221,6 +222,7 @@ export default function WrappedApp() {
         <Route path="/" element={<ChatDiary />} />
         <Route path="/diary" element={<DiaryPage />} />
         <Route path="/calendar" element={<CalendarPage />} />
+        <Route path="/login" element={<LoginPage />} />
       </Routes>
     </BrowserRouter>
   );
