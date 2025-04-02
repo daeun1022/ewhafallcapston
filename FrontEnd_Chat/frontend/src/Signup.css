@@ -1,0 +1,93 @@
+.signup-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  
+  .signup-form {
+    display: flex;
+    flex-direction: column;
+    width: 600px;
+    max-width: 90%;
+    margin-bottom: 2vh;
+  }
+  
+  .signup-title {
+    font-size: 2rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  
+  .signup-form label {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    margin-top: 1.2rem;
+  }
+  
+  /* ✅ 텍스트 입력창 + 버튼을 한 줄에 유지하고 input 너비는 고정 */
+  .input-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .signup-input {
+    width: 100%;
+    max-width: 100%;
+    flex-shrink: 0;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border: 2px solid black;
+    border-radius: 2rem;
+    outline: none;
+    transition: border-color 0.2s, border-width 0.2s;
+  }
+  
+  .signup-input:focus {
+    border-color: green;
+    border-width: 3px;
+  }
+  
+  .side-button {
+    white-space: nowrap;
+    padding: 0.75rem 1.2rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 1rem;
+    background-color: #28a745;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    flex-shrink: 0; /* ✅ 버튼 크기로 줄어들지 않게 */
+  }
+  
+  .side-button:hover {
+    background-color: #1e7e34;
+  }
+  
+  .signup-submit {
+    margin: 2rem auto 0;
+    padding: 0.75rem 2rem;
+    background-color: #28a745;
+    color: white;
+    font-size: 1rem;
+    border: none;
+    border-radius: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .signup-submit:hover {
+    background-color: #1e7e34;
+  }
+  
+  .error-message {
+    color: red;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
+  

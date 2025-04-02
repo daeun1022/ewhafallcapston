@@ -7,6 +7,7 @@ import "./App.css";
 import DiaryPage from "./Diary";
 import CalendarPage from "./Calendar";
 import LoginPage from "./Login";
+import SignupPage from "./Signup";
 
 const moodIcons = {
   happy: <Smile className="icon" />,
@@ -223,6 +224,7 @@ export default function WrappedApp() {
         <Route path="/diary" element={<DiaryPage />} />
         <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
       </Routes>
     </BrowserRouter>
   );
