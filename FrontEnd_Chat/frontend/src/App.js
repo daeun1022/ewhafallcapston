@@ -21,7 +21,10 @@ const moodIcons = {
   Meh: <Meh className="icon emotion-icon" />,
 };
 
-const getTodayKey = () => new Date().toISOString().split("T")[0];
+const getTodayKey = () => {
+  const kst = new Date(Date.now() + 9 * 60 * 60 * 1000); // KST = UTC + 9시간
+  return kst.toISOString().split("T")[0];
+};
 const moodPriority = ["Angry", "Annoyed", "Laugh", "Smile", "Frown", "Meh"];
 
 function ChatDiary() {
@@ -44,6 +47,13 @@ function ChatDiary() {
     const saved = localStorage.getItem("chatMessagesByDate");
     return saved ? JSON.parse(saved) : {};
   });
+
+  useEffect(() => {
+    const today = getTodayKey();
+    if (!chatMessagesByDate[today]) {
+      setChatMessagesByDate(prev => ({ ...prev, [today]: [] }));
+    }
+  }, [chatMessagesByDate]);
 
   useEffect(() => {
     if (!chatMessagesByDate[currentKey]) {
@@ -69,6 +79,17 @@ function ChatDiary() {
 
   const navigate = useNavigate();
   const textareaRef = useRef(null);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newKey = getTodayKey();
+      if (isToday === false && newKey !== currentKey) {
+        navigate(`/${newKey.replace(/-/g, "")}`);
+      }
+    }, 10 * 1000); // 10초마다 체크
+  
+    return () => clearInterval(interval);
+  }, [currentKey, isToday, navigate]);  
 
   const updateChatLog = (date, mood, summary) => {
     setChatLog(prev => {
