@@ -258,9 +258,10 @@ function ChatDiary() {
             {userBoxOpen && (
               <div className="user-menu">
                 <div className="w-full relative">
-                  <span className="text-sm font-bold">마이페이지</span>
+                  <span className="text-sm font-bold" style={{fontWeight:600, fontSize: 20}}>마이페이지</span>
                   <X className="icon cursor-pointer" size={16} style={{ position: "absolute", top: 20, right: 20 }} onClick={() => setUserBoxOpen(false)} />
                 </div>
+                <button className="mypage-button" onClick={() => setUserBoxOpen(false)}>회원정보 수정</button>
                 <button className="logout-button" onClick={() => setUserBoxOpen(false)}>로그아웃</button>
               </div>
             )}
