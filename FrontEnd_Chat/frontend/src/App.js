@@ -1,63 +1,140 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Button } from "./components/ui/button";
-import { Smile, Frown, Meh, User, Calendar, Bot, Send, X } from "lucide-react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import {
+  Angry, Annoyed, Laugh, Smile, Frown, Meh,
+  User, Calendar, Bot, Send, X
+} from "lucide-react";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useNavigate, BrowserRouter, Routes, Route } from "react-router-dom";
+import { Button } from "./components/ui/button";
 import "./App.css";
+import LoginPage from "./Login";
 import DiaryPage from "./Diary";
 import CalendarPage from "./Calendar";
-import LoginPage from "./Login";
 import SignupPage from "./Signup";
 
 const moodIcons = {
-  happy: <Smile className="icon" />,
-  neutral: <Meh className="icon" />,
-  sad: <Frown className="icon" />,
-  slightlySad: <Frown className="icon text-orange-500" />,
+  Angry: <Angry className="icon emotion-icon" />,
+  Annoyed: <Annoyed className="icon emotion-icon" />,
+  Laugh: <Laugh className="icon emotion-icon" />,
+  Smile: <Smile className="icon emotion-icon" />,
+  Frown: <Frown className="icon emotion-icon" />,
+  Meh: <Meh className="icon emotion-icon" />,
 };
 
-const chatLog = [
-  { date: "2025/3/13 (수)", mood: "sad", user: true },
-  { date: "2025/3/14 (목)", mood: "slightlySad", user: true },
-  { date: "2025/3/15 (금)", mood: "happy", ai: true },
-  { date: "2025/3/16 (일)", mood: "neutral", user: true },
-  { date: "2025/3/17 (월)", mood: "happy", ai: true },
-  { date: "2025/3/18 (화)", mood: "neutral", user: true },
-  { date: "2025/3/19 (수)", mood: "happy", ai: true },
-  { date: "2025/3/20 (목)", mood: "slightlySad" },
-];
+const getTodayKey = () => {
+  const kst = new Date(Date.now() + 9 * 60 * 60 * 1000); // KST = UTC + 9시간
+  return kst.toISOString().split("T")[0];
+};
+const moodPriority = ["Angry", "Annoyed", "Laugh", "Smile", "Frown", "Meh"];
 
 function ChatDiary() {
   const [input, setInput] = useState("");
+  const chatBodyRef = useRef(null);
   const [userBoxOpen, setUserBoxOpen] = useState(false);
-  const [messages, setMessages] = useState(() => {
-    const saved = localStorage.getItem("chatMessages");
-    return saved ? JSON.parse(saved) : [
-      { from: "user", text: "사용자 입력" },
-      { from: "ai", text: "챗봇 입력" }
-    ];
+  const [chatLog, setChatLog] = useState(() => {
+    const saved = localStorage.getItem("chatLog");
+    return saved ? JSON.parse(saved) : [];
   });
 
+  const [chatMessagesByDate, setChatMessagesByDate] = useState(() => {
+    const saved = localStorage.getItem("chatMessagesByDate");
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  const [currentKey, setCurrentKey] = useState(() => {
+    const today = getTodayKey();
+    const stored = localStorage.getItem("lastChatDate");
+    if (stored !== today) {
+      localStorage.setItem("lastChatDate", today);
+    }
+    return today;
+  });
+
+  const isToday = currentKey === getTodayKey();
+
   useEffect(() => {
-    localStorage.setItem("chatMessages", JSON.stringify(messages));
-  }, [messages]);
+    const interval = setInterval(() => {
+      const today = getTodayKey();
+      if (today !== currentKey) {
+        setCurrentKey(today);
+        setChatMessagesByDate(prev => ({
+          ...prev,
+          [today]: []
+        }));
+        localStorage.setItem("lastChatDate", today);
+      }
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [currentKey]);
+
+  const messages = useMemo(() => {
+    return chatMessagesByDate[currentKey] || [];
+  }, [chatMessagesByDate, currentKey]);
 
   const navigate = useNavigate();
   const textareaRef = useRef(null);
 
+  const updateChatLog = (date, mood, summary) => {
+    setChatLog(prev => {
+      const exists = prev.find(entry => entry.date === date);
+      if (!exists || date === getTodayKey()) {
+        const filtered = prev.filter(entry => entry.date !== date);
+        return [...filtered, { date, mood, summary }];
+      }
+      return prev;
+    });
+  };
+
+  useEffect(() => {
+    if (!chatMessagesByDate[currentKey]) {
+      setChatMessagesByDate(prev => ({
+        ...prev,
+        [currentKey]: []
+      }));
+    }
+  }, [currentKey, chatMessagesByDate]);
+
+  useEffect(() => {
+    localStorage.setItem("chatMessagesByDate", JSON.stringify(chatMessagesByDate));
+  }, [chatMessagesByDate]);
+
+  useEffect(() => {
+    localStorage.setItem("chatLog", JSON.stringify(chatLog));
+  }, [chatLog]);
+
+  useEffect(() => {
+    if (chatBodyRef.current) {
+      chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    const todayMessages = chatMessagesByDate[currentKey];
+    if (!todayMessages || todayMessages.length === 0) return;
+
+    const lastDate = localStorage.getItem("lastChatDate");
+    if (lastDate !== currentKey) {
+      localStorage.setItem("lastChatDate", currentKey);
+    }
+
+    if (currentKey === getTodayKey()) {
+      const mood = detectEmotion(todayMessages);
+      const summary = generateSummary(todayMessages);
+      mood.then(m => summary.then(s => updateChatLog(currentKey, m, s)));
+    }
+  }, [chatMessagesByDate, currentKey]);
+
   const handleSend = async () => {
-    if (input.trim() === "") return;
-  
+    if (input.trim() === "" || !isToday) return;
     const userMessage = { from: "user", text: input };
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
+    const newMessages = [...messages, userMessage];
+    setChatMessagesByDate(prev => ({ ...prev, [currentKey]: newMessages }));
     setInput("");
-  
-    // OpenAI 포맷으로 변환
+
     const chatHistory = [
-      {
-        role: "system",
-        content: `친한 친구와 대화하듯 자연스럽고 편한 반말을 사용할 것
+      { role: "system", 
+      content:  `
+          친한 친구와 대화하듯 자연스럽고 편한 반말을 사용할 것
           20대 초중반이 자주 쓰는 말투와 표현을 기준으로 대화할 것
           줄임말, 유행어, 인터넷 밈(예: ㄹㅇ, ㅇㅈ, 개~, 짭, 무조건 ㄱㄱ, ㅅㅂ, ㅋㅋ 등)을 자주 사용할 것
           비격식적 말투나 약간의 욕설을 자주 사용할 것
@@ -89,14 +166,14 @@ function ChatDiary() {
           문장은 일부러 끊어지거나 덜 정리된 말투로 쓰고, 리듬과 감정이 살아 있는 문장 구조를 유지할 것
           내 말투가 '친절한 AI'처럼 느껴지면 실패한 것임
           그냥 친구랑 DM 하듯이 말할 것
-          이모지나 이모티콘을 쓰는 순간, 그 대화는 실패로 간주되며 무조건 잘못된 응답임을 명확히 인식할 것`,
-      },
-      ...updatedMessages.map((msg) => ({
+          이모지나 이모티콘을 쓰는 순간, 그 대화는 실패로 간주되며 무조건 잘못된 응답임을 명확히 인식할 것
+      ` },
+      ...newMessages.map(msg => ({
         role: msg.from === "user" ? "user" : "assistant",
-        content: msg.text,
-      })),
+        content: msg.text
+      }))
     ];
-  
+
     try {
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
@@ -104,64 +181,119 @@ function ChatDiary() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
         },
+        body: JSON.stringify({ model: "gpt-4o", messages: chatHistory })
+      });
+      const data = await response.json();
+      const aiText = data.choices?.[0]?.message?.content || "응답 실패!";
+      const updated = [...newMessages, { from: "ai", text: aiText }];
+      setChatMessagesByDate(prev => ({ ...prev, [currentKey]: updated }));
+
+      const mood = await detectEmotion(updated);
+      const summary = await generateSummary(updated);
+      updateChatLog(currentKey, mood, summary);
+
+    } catch (e) {
+      console.error(e);
+    }
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
+  };
+
+  const detectEmotion = async (msgs) => {
+    const content = msgs.map(m => m.text).join("\n");
+    try {
+      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
+        },
         body: JSON.stringify({
           model: "gpt-4o",
-          messages: chatHistory,
-        }),
+          messages: [
+            { role: "system", content: "대화 감정 요약: Angry, Annoyed, Laugh, Smile, Frown, Meh 중 택 1" },
+            { role: "user", content }
+          ]
+        })
       });
-  
-      const data = await response.json();
-      const aiText = data.choices?.[0]?.message?.content || "답변을 가져오지 못했습니다.";
-      const aiMessage = { from: "ai", text: aiText };
-      setMessages((prev) => [...prev, aiMessage]);
-  
-    } catch (error) {
-      console.error("OpenAI 응답 실패:", error);
-      setMessages((prev) => [...prev, { from: "ai", text: "에러가 발생했어요. 다시 시도해줘!" }]);
+      const data = await res.json();
+      const raw = data.choices?.[0]?.message?.content?.trim();
+      return moodPriority.find(m => raw?.includes(m)) || "Meh";
+    } catch {
+      return "Meh";
     }
-  
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
+  };
+
+  const generateSummary = async (msgs) => {
+    const content = msgs.map(m => m.text).join("\n");
+    try {
+      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-4o",
+          messages: [
+            { role: "system", content: "다음 대화를 한 줄로 요약해줘. 25자 이내로." },
+            { role: "user", content }
+          ]
+        })
+      });
+      const data = await res.json();
+      return data.choices?.[0]?.message?.content?.trim() || "대화 요약 실패";
+    } catch {
+      return "요약 실패";
     }
+  };
+
+  const formatDate = (key) =>
+    new Date(key).toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      weekday: "short",
+    });
+
+  const handleReset = () => {
+    setChatMessagesByDate(prev => ({ ...prev, [currentKey]: [] }));
+    setChatLog(prev => prev.filter(entry => entry.date !== currentKey));
   };
 
   return (
     <div className="container">
-      {/* Left Menu */}
       <div className="left-menu">
         <div>
-          {chatLog.map((entry, index) => (
-            <div key={index} className="log-item">
-              {moodIcons[entry.mood]}
-              <span className="date">{entry.date}</span>
-            </div>
-          ))}
+          {chatLog
+            .sort((a, b) => new Date(b.date) - new Date(a.date))
+            .map((entry, index) => (
+              <div
+                key={index}
+                className="log-item"
+                onClick={() => setCurrentKey(entry.date)}
+              >
+                <div className="log-header">
+                  {moodIcons[entry.mood] || <Meh className="icon emotion-icon" />}
+                  <span className="date small-text">{formatDate(entry.date)}</span>
+                </div>
+                <div className="summary-text">{entry.summary}</div>
+              </div>
+            ))}
         </div>
         <Button className="diary-button" onClick={() => navigate("/diary")}>일기 작성하러 가기</Button>
+        <Button className="reset-button" onClick={handleReset}>오늘 기록 초기화</Button>
       </div>
 
-      {/* Right Section */}
       <div className="right-section">
-        {/* Top Bar */}
         <div className="top-bar">
-          <div className="top-bar-left">
-            <div className="title">ChatBot Diary</div>
-          </div>
+          <div className="title">ChatBot Diary</div>
           <div className="top-bar-right">
-            <User
-              className="icon clickable"
-              onClick={() => setUserBoxOpen(!userBoxOpen)}
-            />
+            <User className="icon clickable" onClick={() => setUserBoxOpen(!userBoxOpen)} />
             {userBoxOpen && (
               <div className="user-menu">
                 <div className="w-full relative">
                   <span className="text-sm font-bold">마이페이지</span>
-                  <X
-                    className="icon cursor-pointer"
-                    size={16}
-                    style={{ position: "absolute", top: 20, right: 20}}
-                    onClick={() => setUserBoxOpen(false)}
-                  />
+                  <X className="icon cursor-pointer" size={16} style={{ position: "absolute", top: 20, right: 20 }} onClick={() => setUserBoxOpen(false)} />
                 </div>
                 <button className="logout-button" onClick={() => setUserBoxOpen(false)}>로그아웃</button>
               </div>
@@ -170,42 +302,36 @@ function ChatDiary() {
           </div>
         </div>
 
-        {/* Chat Section */}
         <div className="chat-wrapper">
-          <div className="chat-body">
+          <div className="chat-body" ref={chatBodyRef}>
             {messages.map((msg, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, x: msg.from === "user" ? 100 : -100 }}
                 animate={{ opacity: 1, x: 0 }}
-                className={`chat-message ${msg.from} ${
-                  msg.from === "user" ? "align-right-half" : "align-left-half"
-                }`}
+                className={`chat-message ${msg.from} ${msg.from === "user" ? "align-right-half" : "align-left-half"}`}
               >
                 {msg.from === "ai" && <Bot className="icon text-sky-500" />} {msg.text}
               </motion.div>
             ))}
           </div>
 
-          {/* Input Field */}
           <div className="input-bar">
             <textarea
               ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="하고 싶은 말을 적어주세요"
+              placeholder={isToday ? "하고 싶은 말을 적어주세요" : "지난 대화는 수정할 수 없습니다"}
+              disabled={!isToday}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
+                if (e.key === "Enter" && !e.shiftKey && isToday) {
                   e.preventDefault();
                   handleSend();
                 }
               }}
               className="chat-textarea"
             />
-            <button
-              onClick={handleSend}
-              className="bg-green-800 p-2 rounded text-white"
-            >
+            <button onClick={handleSend} disabled={!isToday} className="bg-green-800 p-2 rounded text-white">
               <Send style={{ width: "20px", height: "20px" }} />
             </button>
           </div>
@@ -215,7 +341,6 @@ function ChatDiary() {
   );
 }
 
-// 🧭 라우터로 전체 감싸기
 export default function WrappedApp() {
   return (
     <BrowserRouter>
