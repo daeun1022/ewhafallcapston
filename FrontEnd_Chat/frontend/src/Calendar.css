@@ -1,0 +1,135 @@
+/* Calendar.css */
+body {
+    margin: 0;
+    background-color: #feffed; /* 원하는 색상으로 변경 가능 */
+    font-family: Arial, sans-serif;
+  }
+
+.calendar-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    margin-left: 5rem;
+    margin-right: 5rem;
+    padding-top: 2rem;
+    padding-bottom: 5rem;
+    box-sizing: border-box;
+}
+
+.calendar-title {
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: #0f5a0b;
+  }  
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.calendar-header button {
+    background-color: #0f5a0b;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    padding-bottom: 0.5rem;
+    padding-top: 0.2rem;
+    padding-left : 0.5rem;
+    padding-right: 0.5rem;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.calendar-header button:hover {
+    background-color: #0c4709;
+    transform: scale(1.1);
+}
+
+.calendar-header span {
+    font-size: 1.3rem;
+    font-weight: bold;
+}
+
+.calendar-header h2 {
+    margin: 0;
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 0.5rem 0;
+}
+
+.calendar-grid {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.calendar-week {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    flex-grow: 1;
+    gap: 0.5rem; /* 요 줄 추가하면 요일 칸끼리 간격 생김 */
+}
+
+.calendar-day {
+    display: flex;
+    justify-content: flex-start;   /* 왼쪽 정렬 */
+    align-items: flex-start;       /* 위쪽 정렬 */
+    padding: 2px;                  /* 전체 패딩 */
+    padding-top: 4px;              /* 위쪽 간격만 살짝 */
+    font-size: 0.95rem;
+    height: 100%;
+    width: 100%;
+    border-radius : 1rem;
+    box-sizing: border-box;
+}
+
+.calendar-day:hover {
+    background-color: #b4e8b0;
+    cursor: pointer;
+}
+
+.calendar-day.today {
+    background-color: #4caf50;
+    color: white;
+    font-weight: bold;
+}
+
+.calendar-day.empty {
+    background-color: transparent;
+    border: none;
+    pointer-events: none;
+}
+
+.calendar-date {
+    margin-top: 4px;     /* 위에 살짝 간격 주기 */
+    margin-left: 16px;
+    font-size: 25px;
+  }
+
+  .calendar-arrow {
+    background-color: #0f5a0b;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    padding: 0.5rem;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  
+  .calendar-arrow:hover {
+    background-color: #0c4709;
+    transform: scale(1.1);
+  }

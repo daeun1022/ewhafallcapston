@@ -3,7 +3,7 @@ import {
   Angry, Annoyed, Laugh, Smile, Frown, Meh,
   User, Calendar, Bot, Send, X
 } from "lucide-react";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "./components/ui/button";
 import "./App.css";
@@ -21,13 +21,17 @@ const moodIcons = {
   Meh: <Meh className="icon emotion-icon" />,
 };
 
-const getTodayKey = () => {
-  const kst = new Date(Date.now() + 9 * 60 * 60 * 1000); // KST = UTC + 9시간
-  return kst.toISOString().split("T")[0];
-};
+const getTodayKey = () => new Date().toISOString().split("T")[0];
 const moodPriority = ["Angry", "Annoyed", "Laugh", "Smile", "Frown", "Meh"];
 
 function ChatDiary() {
+  const { dateKey } = useParams();
+  const currentKey = useMemo(() => {
+    if (!dateKey) return getTodayKey();
+    return `${dateKey.slice(0, 4)}-${dateKey.slice(4, 6)}-${dateKey.slice(6)}`;
+  }, [dateKey]);
+  const isToday = currentKey === getTodayKey();
+
   const [input, setInput] = useState("");
   const chatBodyRef = useRef(null);
   const [userBoxOpen, setUserBoxOpen] = useState(false);
@@ -41,35 +45,27 @@ function ChatDiary() {
     return saved ? JSON.parse(saved) : {};
   });
 
-  const [currentKey, setCurrentKey] = useState(() => {
-    const today = getTodayKey();
-    const stored = localStorage.getItem("lastChatDate");
-    if (stored !== today) {
-      localStorage.setItem("lastChatDate", today);
+  useEffect(() => {
+    if (!chatMessagesByDate[currentKey]) {
+      setChatMessagesByDate(prev => ({ ...prev, [currentKey]: [] }));
     }
-    return today;
-  });
-
-  const isToday = currentKey === getTodayKey();
+  }, [currentKey , chatMessagesByDate]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const today = getTodayKey();
-      if (today !== currentKey) {
-        setCurrentKey(today);
-        setChatMessagesByDate(prev => ({
-          ...prev,
-          [today]: []
-        }));
-        localStorage.setItem("lastChatDate", today);
-      }
-    }, 10000);
-    return () => clearInterval(interval);
-  }, [currentKey]);
+    localStorage.setItem("chatMessagesByDate", JSON.stringify(chatMessagesByDate));
+  }, [chatMessagesByDate]);
 
-  const messages = useMemo(() => {
-    return chatMessagesByDate[currentKey] || [];
-  }, [chatMessagesByDate, currentKey]);
+  useEffect(() => {
+    localStorage.setItem("chatLog", JSON.stringify(chatLog));
+  }, [chatLog]);
+
+  const messages = useMemo(() => chatMessagesByDate[currentKey] || [], [chatMessagesByDate, currentKey]);
+
+  useEffect(() => {
+    if (chatBodyRef.current) {
+      chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   const navigate = useNavigate();
   const textareaRef = useRef(null);
@@ -86,37 +82,8 @@ function ChatDiary() {
   };
 
   useEffect(() => {
-    if (!chatMessagesByDate[currentKey]) {
-      setChatMessagesByDate(prev => ({
-        ...prev,
-        [currentKey]: []
-      }));
-    }
-  }, [currentKey, chatMessagesByDate]);
-
-  useEffect(() => {
-    localStorage.setItem("chatMessagesByDate", JSON.stringify(chatMessagesByDate));
-  }, [chatMessagesByDate]);
-
-  useEffect(() => {
-    localStorage.setItem("chatLog", JSON.stringify(chatLog));
-  }, [chatLog]);
-
-  useEffect(() => {
-    if (chatBodyRef.current) {
-      chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
-    }
-  }, [messages]);
-
-  useEffect(() => {
     const todayMessages = chatMessagesByDate[currentKey];
     if (!todayMessages || todayMessages.length === 0) return;
-
-    const lastDate = localStorage.getItem("lastChatDate");
-    if (lastDate !== currentKey) {
-      localStorage.setItem("lastChatDate", currentKey);
-    }
-
     if (currentKey === getTodayKey()) {
       const mood = detectEmotion(todayMessages);
       const summary = generateSummary(todayMessages);
@@ -247,13 +214,12 @@ function ChatDiary() {
     }
   };
 
-  const formatDate = (key) =>
-    new Date(key).toLocaleDateString("ko-KR", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      weekday: "short",
-    });
+  const formatDate = (key) => new Date(key).toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    weekday: "short",
+  });
 
   const handleReset = () => {
     setChatMessagesByDate(prev => ({ ...prev, [currentKey]: [] }));
@@ -270,7 +236,7 @@ function ChatDiary() {
               <div
                 key={index}
                 className="log-item"
-                onClick={() => setCurrentKey(entry.date)}
+                onClick={() => navigate(`/${entry.date.replace(/-/g, "")}`)}
               >
                 <div className="log-header">
                   {moodIcons[entry.mood] || <Meh className="icon emotion-icon" />}
@@ -280,7 +246,7 @@ function ChatDiary() {
               </div>
             ))}
         </div>
-        <Button className="diary-button" onClick={() => navigate("/diary")}>일기 작성하러 가기</Button>
+        <Button className="diary-button" onClick={() => navigate("/diary")}>일기화면으로 이동하기</Button>
         <Button className="reset-button" onClick={handleReset}>오늘 기록 초기화</Button>
       </div>
 
@@ -341,11 +307,21 @@ function ChatDiary() {
   );
 }
 
+function NavigateToToday() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const today = getTodayKey().replace(/-/g, "");
+    navigate(`/${today}`);
+  }, [navigate]);
+  return null;
+}
+
 export default function WrappedApp() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<ChatDiary />} />
+        <Route path="/" element={<NavigateToToday />} />
+        <Route path=":dateKey" element={<ChatDiary />} />
         <Route path="/diary" element={<DiaryPage />} />
         <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/login" element={<LoginPage />} />

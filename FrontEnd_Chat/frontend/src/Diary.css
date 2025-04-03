@@ -1,0 +1,79 @@
+body {
+    background-color: #fefee9;
+    margin: 0;
+    padding: 0;
+    font-family: "Noto Sans KR", sans-serif;
+  }
+  
+  .diary-wrapper {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .diary-background {
+    background-color: #fefee9;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* 왼쪽 상단 고정된 타이틀 */
+  .diary-fixed-title {
+    position: fixed;
+    top: 30px;
+    left: 70px;
+    font-size: 1.7rem;
+    font-weight: bold;
+    color: #0f5a0b;
+    cursor: pointer;
+    z-index: 1000;
+  }
+  
+  .diary-fixed-title:focus {
+    outline: 2px solid #0f5a0b;
+  }  
+  
+  .diary {
+    background-color: white;
+    width: 90%;
+    max-width: 800px;
+    height: 90%;
+    border: 3px solid #222;
+    border-radius: 10px;
+    position: relative;
+    padding-top: 3rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  }
+  
+  .spring {
+    position: absolute;
+    top: 0.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.5rem;
+    z-index: 1;
+  }
+  
+  .spring-ring {
+    width: 10px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #b9812e;
+    border: 2px solid #333;
+    margin-left: 15px;
+    margin-right: 15px;
+  }
+  
+  .diary-summary-text{
+    padding-top: 20px;
+    padding-left: 50px;
+    padding-right: 50px;
+    line-height: 2;
+  }
+
+  
