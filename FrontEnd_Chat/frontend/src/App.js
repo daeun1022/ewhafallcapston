@@ -1,8 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import {
-  Angry, Annoyed, Laugh, Smile, Frown, Meh,
-  User, Calendar, Bot, Send, X
-} from "lucide-react";
+import { Angry, Annoyed, Laugh, Smile, Frown, Meh,User, Calendar, Bot, Send, X } from "lucide-react";
 import { BrowserRouter, Routes, Route, useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "./components/ui/button";
@@ -12,6 +9,7 @@ import DiaryPage from "./Diary";
 import CalendarPage from "./Calendar";
 import SignupPage from "./Signup";
 
+/* lucid-react에서 감정 이모티콘 갖고 옴 */
 const moodIcons = {
   Angry: <Angry className="icon emotion-icon" />,
   Annoyed: <Annoyed className="icon emotion-icon" />,
@@ -21,33 +19,55 @@ const moodIcons = {
   Meh: <Meh className="icon emotion-icon" />,
 };
 
+/* 감정들의 우선순위 설정 - 모호한 경우 앞에 있는 걸 우선적으로 선택 */
+const moodPriority = ["Angry", "Annoyed", "Laugh", "Smile", "Frown", "Meh"];
+
+/* kst를 기준으로 현재의 시간을 계산한 뒤 2025-04-07 형식의 String으로 변환 */
 const getTodayKey = () => {
   const kst = new Date(Date.now() + 9 * 60 * 60 * 1000); // KST = UTC + 9시간
   return kst.toISOString().split("T")[0];
 };
-const moodPriority = ["Angry", "Annoyed", "Laugh", "Smile", "Frown", "Meh"];
 
 function ChatDiary() {
+  /* URL 경로에 있는 dateKey 값을 갖고옴 ex.20250407 */
   const { dateKey } = useParams();
+
+  /*dateKey 가 없다면 getTodayKey로 오늘날짜 호출 & 있다면 2025-04-07 형식으로 바꿔 currentKey로 설정 */
   const currentKey = useMemo(() => {
     if (!dateKey) return getTodayKey();
     return `${dateKey.slice(0, 4)}-${dateKey.slice(4, 6)}-${dateKey.slice(6)}`;
   }, [dateKey]);
+
+  /* 현재 보고있는 날짜가 오늘인지 아닌지 확인 - 지나간 날짜의 채팅창을 막기 위해서 */
   const isToday = currentKey === getTodayKey();
 
-  const [input, setInput] = useState("");
-  const chatBodyRef = useRef(null);
-  const [userBoxOpen, setUserBoxOpen] = useState(false);
+  /* local storage에서 chatLog를 불러옴 있으면 JSON 형태의 문자열로 없으면 null로 불러온 값을 chatLog의 초기 상태로 사용 */
   const [chatLog, setChatLog] = useState(() => {
     const saved = localStorage.getItem("chatLog");
     return saved ? JSON.parse(saved) : [];
   });
 
+  /* 감정 및 대화 내용 요약(ChatLog)을 날짜별로 localStorage에 저장 */
+  useEffect(() => {
+    localStorage.setItem("chatLog", JSON.stringify(chatLog));
+  }, [chatLog]);
+
+  /* local storage에서 chatMessagesByDate를 불러옴 있으면 JSON 형태의 문자열로 없으면 null로 - 날짜별로 채팅 메시지 관리 가능 */
+  /* {"2025-04-07": [{ from: "user", text: "안녕?" }, ...]} 형식 */
   const [chatMessagesByDate, setChatMessagesByDate] = useState(() => {
     const saved = localStorage.getItem("chatMessagesByDate");
     return saved ? JSON.parse(saved) : {};
   });
 
+  /* 전체 채팅기록을 날짜별로 localStorage에 저장 */
+  useEffect(() => {
+    localStorage.setItem("chatMessagesByDate", JSON.stringify(chatMessagesByDate));
+  }, [chatMessagesByDate]);
+
+  /* chatMessagesByDate[currentKey]를 찾아 해당 날짜의 대화 배열을 반환 */
+  const messages = useMemo(() => chatMessagesByDate[currentKey] || [], [chatMessagesByDate, currentKey]);
+
+  /* chatMessagesByDate가 바뀔때마다 useEffect 수행 - const today로 오늘날짜의 기록을 갖고 오는데 없다면 빈 채팅창을 표시 (12시 넘었을 때 빈화면 보여주기 위해) */
   useEffect(() => {
     const today = getTodayKey();
     if (!chatMessagesByDate[today]) {
@@ -55,31 +75,17 @@ function ChatDiary() {
     }
   }, [chatMessagesByDate]);
 
+  /* currentKey 혹은 chatMessagesByDate가 바뀔때마다 useEffect 수행 - currentKey를 기준으로 해당 날짜의 기록이 없다면 빈 채팅창을 표시 (달력에서 대화기록이 없는 날짜를 선택시 빈 채팅창을 보여주기 위해) */
   useEffect(() => {
     if (!chatMessagesByDate[currentKey]) {
       setChatMessagesByDate(prev => ({ ...prev, [currentKey]: [] }));
     }
   }, [currentKey , chatMessagesByDate]);
 
-  useEffect(() => {
-    localStorage.setItem("chatMessagesByDate", JSON.stringify(chatMessagesByDate));
-  }, [chatMessagesByDate]);
-
-  useEffect(() => {
-    localStorage.setItem("chatLog", JSON.stringify(chatLog));
-  }, [chatLog]);
-
-  const messages = useMemo(() => chatMessagesByDate[currentKey] || [], [chatMessagesByDate, currentKey]);
-
-  useEffect(() => {
-    if (chatBodyRef.current) {
-      chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
-    }
-  }, [messages]);
-
+  /* 페이지 이동을 위한 함수 ex. /Diary -> 달력 페이지로 이동 */
   const navigate = useNavigate();
-  const textareaRef = useRef(null);
 
+  /* 10초마다 날짜를 체크해 날짜가 바뀌었다면 새로고침하지 않더라도 navigate를 통해 자동으로 새 채팅창으로 이동 */
   useEffect(() => {
     const interval = setInterval(() => {
       const newKey = getTodayKey();
@@ -87,21 +93,10 @@ function ChatDiary() {
         navigate(`/${newKey.replace(/-/g, "")}`);
       }
     }, 10 * 1000); // 10초마다 체크
-  
     return () => clearInterval(interval);
   }, [currentKey, isToday, navigate]);  
 
-  const updateChatLog = (date, mood, summary) => {
-    setChatLog(prev => {
-      const exists = prev.find(entry => entry.date === date);
-      if (!exists || date === getTodayKey()) {
-        const filtered = prev.filter(entry => entry.date !== date);
-        return [...filtered, { date, mood, summary }];
-      }
-      return prev;
-    });
-  };
-
+  /* currentKey를 기반으로 todayMessages를 갖고 오고 해당 currentKey 가 getTodayKey와 같을 경우(오늘 날짜일 경우) 감정분석하고 요약해서 chatLog에 반영 - 과거 날짜의 감정 및 대화 내용 요약은 해당 일자가 지나면 더이상 바뀌지 않도록 */
   useEffect(() => {
     const todayMessages = chatMessagesByDate[currentKey];
     if (!todayMessages || todayMessages.length === 0) return;
@@ -112,6 +107,38 @@ function ChatDiary() {
     }
   }, [chatMessagesByDate, currentKey]);
 
+  /*텍스트 입력창 내용 관리 */
+  const [input, setInput] = useState("");
+
+  /* DOM 요소 접근 - 채팅 화면 자동 스크롤 이나 텍스트 입력창이 길어질 때 스크롤 기능 등을 위해 */
+  const textareaRef = useRef(null);
+
+  /* 화면 자동 스크롤 */
+  const chatBodyRef = useRef(null);
+
+  /* 새로운 메세지가 생길 때마다 채팅창을 가장 밑으로 내림 */
+  useEffect(() => {
+    if (chatBodyRef.current) {
+      chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  /*User 메뉴 토글 상태 */
+  const [userBoxOpen, setUserBoxOpen] = useState(false);
+
+  /* 사용자나 AI의 응답에 따라 왼쪽 메뉴의 ChatLog 업데이트 */
+  const updateChatLog = (date, mood, summary) => {
+    setChatLog(prev => {
+      const exists = prev.find(entry => entry.date === date);
+      if (!exists || date === getTodayKey()) {
+        const filtered = prev.filter(entry => entry.date !== date);
+        return [...filtered, { date, mood, summary }];
+      }
+      return prev;
+    });
+  };
+  
+  /* 사용자가 메세지 입력시 채팅창에 해당 메세지를 추가하고 입력창을 비워줌 - 만약 isToday가 아니라면(오늘 날짜가 아니라면) 채팅창 입력을 막음 */
   const handleSend = async () => {
     if (input.trim() === "" || !isToday) return;
     const userMessage = { from: "user", text: input };
@@ -119,6 +146,7 @@ function ChatDiary() {
     setChatMessagesByDate(prev => ({ ...prev, [currentKey]: newMessages }));
     setInput("");
 
+    /* 채팅 AI 프롬프트 */
     const chatHistory = [
       { role: "system", 
       content:  `
@@ -156,6 +184,7 @@ function ChatDiary() {
           그냥 친구랑 DM 하듯이 말할 것
           이모지나 이모티콘을 쓰는 순간, 그 대화는 실패로 간주되며 무조건 잘못된 응답임을 명확히 인식할 것
       ` },
+      // 오픈 API가 이해할 수 있는 형식으로 메세지 포맷을 바꿈 ex.ai -> assistant & text -> content
       ...newMessages.map(msg => ({
         role: msg.from === "user" ? "user" : "assistant",
         content: msg.text
@@ -163,6 +192,7 @@ function ChatDiary() {
     ];
 
     try {
+      //Open API에 POST 요청을 보냄
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -171,23 +201,33 @@ function ChatDiary() {
         },
         body: JSON.stringify({ model: "gpt-4o", messages: chatHistory })
       });
+      //응답을 JSON 형식으로 변환
       const data = await response.json();
+      //AI의 응답 텍스트를 꺼내옴
       const aiText = data.choices?.[0]?.message?.content || "응답 실패!";
+      //기존 메세지 배열 뒤에 AI의 응답을 붙여 새로운 메세지 배열 생성
       const updated = [...newMessages, { from: "ai", text: aiText }];
+      //currentKey 날짜에 해당하는 대화에 받아온 AI 응답 추가
       setChatMessagesByDate(prev => ({ ...prev, [currentKey]: updated }));
 
+      // 전체 대화 내용을 기반으로 감정 분석 및 대화내용 요약 진행
       const mood = await detectEmotion(updated);
       const summary = await generateSummary(updated);
+      // 감정 분석 및 대화내용 요약 후 왼쪽 메뉴의 ChatLog 에 저장
       updateChatLog(currentKey, mood, summary);
 
+    //오류 발생시 콘솔창에 오류 출력
     } catch (e) {
       console.error(e);
     }
+    // 입력창 높이 자동 조정
     if (textareaRef.current) textareaRef.current.style.height = "auto";
   };
 
   const detectEmotion = async (msgs) => {
+    // 메세지 객체에서 text만 추출한 뒤 \n 으로 연결
     const content = msgs.map(m => m.text).join("\n");
+    // POST 방식으로 OPEN API 호출
     try {
       const res = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
@@ -198,13 +238,17 @@ function ChatDiary() {
         body: JSON.stringify({
           model: "gpt-4o",
           messages: [
+            // 감정 분석 프롬프트
             { role: "system", content: "대화 감정 요약: Angry, Annoyed, Laugh, Smile, Frown, Meh 중 택 1" },
+            // 대화 내용 전달
             { role: "user", content }
           ]
         })
       });
+      //응답 JSON 에서 감정 분석 결과 데이터를 꺼내옴
       const data = await res.json();
       const raw = data.choices?.[0]?.message?.content?.trim();
+      //raw 문자열에 주어진 감정 중 어떤 감정이 있는 지 찾고 해당 감정을 반환 / 찾지 못했다면 기본 감정인 Meh 반환
       return moodPriority.find(m => raw?.includes(m)) || "Meh";
     } catch {
       return "Meh";
@@ -212,7 +256,9 @@ function ChatDiary() {
   };
 
   const generateSummary = async (msgs) => {
+    // 메세지 객체에서 text만 추출한 뒤 \n 으로 연결
     const content = msgs.map(m => m.text).join("\n");
+    // POST 방식으로 OPEN API 호출
     try {
       const res = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
@@ -223,11 +269,14 @@ function ChatDiary() {
         body: JSON.stringify({
           model: "gpt-4o",
           messages: [
+            // 대화 요약 프롬프트
             { role: "system", content: "다음 대화를 한 줄로 요약해줘. 25자 이내로." },
+            // 대화 내용 전달
             { role: "user", content }
           ]
         })
       });
+      //응답 JSON 에서 대화 요약 결과 데이터를 꺼내옴
       const data = await res.json();
       return data.choices?.[0]?.message?.content?.trim() || "대화 요약 실패";
     } catch {
@@ -235,6 +284,7 @@ function ChatDiary() {
     }
   };
 
+  /* key 문자열을 받아 날짜 객체로 바꿈 - 왼쪽 메뉴의 ChatLog에 2025.04.07 (월) 형식으로 표현하기 위해 */
   const formatDate = (key) => new Date(key).toLocaleDateString("ko-KR", {
     year: "numeric",
     month: "2-digit",
@@ -242,23 +292,30 @@ function ChatDiary() {
     weekday: "short",
   });
 
+  /* 오늘 기록 초기화 선택시 오늘 날짜의 모든 대화기록을 초기화 시키는 용도 */
   const handleReset = () => {
     setChatMessagesByDate(prev => ({ ...prev, [currentKey]: [] }));
     setChatLog(prev => prev.filter(entry => entry.date !== currentKey));
   };
 
+  /* 전체적인 인터페이스 */
   return (
     <div className="container">
+      {/* 왼쪽 사이드 바 기능*/}
       <div className="left-menu">
         <div>
+          {/* 왼쪽 사이드 바 기능*/}
           {chatLog
+            /* 날짜별 채팅 요약 리스트 내림차순 정리*/
             .sort((a, b) => new Date(b.date) - new Date(a.date))
+            /* 왼쪽 사이드 바에 있는 날짜별 채팅 요약 리스트 - map을 통해 각각 하나의 div로*/
             .map((entry, index) => (
               <div
                 key={index}
                 className="log-item"
                 onClick={() => navigate(`/${entry.date.replace(/-/g, "")}`)}
               >
+                {/* 요약 리스트에 각각 감정 이모티콘과 대화 내용 요약을 표시 */}
                 <div className="log-header">
                   {moodIcons[entry.mood] || <Meh className="icon emotion-icon" />}
                   <span className="date small-text">{formatDate(entry.date)}</span>
@@ -267,14 +324,16 @@ function ChatDiary() {
               </div>
             ))}
         </div>
-        <Button className="diary-button" onClick={() => navigate("/diary")}>일기화면으로 이동하기</Button>
+        <Button className="diary-button" onClick={() => navigate(`/diary?date=${currentKey}`)}>일기화면으로 이동하기</Button>
         <Button className="reset-button" onClick={handleReset}>오늘 기록 초기화</Button>
       </div>
 
       <div className="right-section">
+        {/* 상단바 기능 */}
         <div className="top-bar">
           <div className="title">ChatBot Diary</div>
           <div className="top-bar-right">
+            {/* 유저 아이콘 기능 */}
             <User className="icon clickable" onClick={() => setUserBoxOpen(!userBoxOpen)} />
             {userBoxOpen && (
               <div className="user-menu">
@@ -286,17 +345,23 @@ function ChatDiary() {
                 <button className="logout-button" onClick={() => setUserBoxOpen(false)}>로그아웃</button>
               </div>
             )}
+            {/* 달력 */}
             <Calendar className="icon clickable" onClick={() => navigate("/calendar")} />
           </div>
         </div>
 
+        {/* 채팅 화면 기능 */}
         <div className="chat-wrapper">
           <div className="chat-body" ref={chatBodyRef}>
+            {/* 사용자와 AI의 채팅을 각각 motion.dv로 만듦 */}
             {messages.map((msg, index) => (
               <motion.div
                 key={index}
+                /* user의 입력일 경우 오른쪽에서, AI의 입력일 경우 왼쪽에서 나타남 */
                 initial={{ opacity: 0, x: msg.from === "user" ? 100 : -100 }}
+                /* 말풍선 애니메이션 기능 */
                 animate={{ opacity: 1, x: 0 }}
+                /* user의 입력일 경우 오른쪽 절반에, AI의 입력일 경우 왼쪽 절반에 표시 */
                 className={`chat-message ${msg.from} ${msg.from === "user" ? "align-right-half" : "align-left-half"}`}
               >
                 {msg.from === "ai" && <Bot className="icon text-sky-500" />} {msg.text}
@@ -304,6 +369,7 @@ function ChatDiary() {
             ))}
           </div>
 
+          {/* 텍스트 입력 창 */}
           <div className="input-bar">
             <textarea
               ref={textareaRef}
@@ -329,6 +395,7 @@ function ChatDiary() {
   );
 }
 
+/* 사이트 URL을 /20250407 이런식으로 오늘 날짜를 바꿔주는 용도 - 사이트 들어갔을 때 항상 오늘의 채팅 화면이 뜰 수 있게 하기 위해서 */
 function NavigateToToday() {
   const navigate = useNavigate();
   useEffect(() => {
@@ -338,6 +405,7 @@ function NavigateToToday() {
   return null;
 }
 
+/* 다른 페이지로 이동 */
 export default function WrappedApp() {
   return (
     <BrowserRouter>

@@ -17,7 +17,7 @@ export default function DiaryPage() {
   // 현재 URL에서 date 파라미터 가져오기
   const extractDateFromQuery = () => {
     const params = new URLSearchParams(location.search);
-    return params.get("date");
+    return params.get("date") || todayKey;
   };
 
   const queryDate = extractDateFromQuery();
@@ -31,19 +31,12 @@ export default function DiaryPage() {
     return `${year}년 ${month}월 ${day}일 (${weekday})`;
   };
 
-  // 오늘 날짜가 아니면 자동으로 오늘로 리디렉트
-  useEffect(() => {
-    if (queryDate !== todayKey) {
-      navigate(`/diary?date=${todayKey}`, { replace: true });
-    }
-  }, [queryDate, todayKey, navigate]);
-
   useEffect(() => {
     const stored = localStorage.getItem("chatMessagesByDate");
     if (!stored) return;
 
     const parsed = JSON.parse(stored);
-    const messages = parsed[todayKey];
+    const messages = parsed[queryDate];
     if (!messages || messages.length === 0) return;
 
     const content = messages.map(m => m.text).join("\n");
@@ -61,7 +54,8 @@ export default function DiaryPage() {
             messages: [
               {
                 role: "system",
-                content: `${getFormattedKoreanDate(todayKey)}의 대화 내용을 자연스럽고 감정 중심으로 요약해줘. 
+                content: `${getFormattedKoreanDate(queryDate)}의 대화 내용을 자연스럽고 감정 중심으로 요약해줘.
+                ${getFormattedKoreanDate(queryDate)} 의 값을 먼저 출력해줘.
                 - 요약은 간결하고 부드러운 말투로, 감정과 분위기를 중심으로 작성할 것.
                 - 이모지와 이모티콘은 절대 사용하지 말 것.
                 - 너무 딱딱하거나 교과서적인 표현은 피하고, 실제 친구에게 말하듯 편안하게 써줘.`,
@@ -84,7 +78,7 @@ export default function DiaryPage() {
     };
 
     fetchSummary();
-  }, [todayKey]);
+  }, [queryDate]);
 
   return (
     <div className="diary-wrapper">
