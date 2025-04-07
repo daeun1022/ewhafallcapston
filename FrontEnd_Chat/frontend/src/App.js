@@ -8,6 +8,9 @@ import LoginPage from "./Login";
 import DiaryPage from "./Diary";
 import CalendarPage from "./Calendar";
 import SignupPage from "./Signup";
+//login
+import { db } from "./firebase";
+import { collection, addDoc, Timestamp } from "firebase/firestore";
 
 /* lucid-react에서 감정 이모티콘 갖고 옴 */
 const moodIcons = {
@@ -206,7 +209,8 @@ function ChatDiary() {
       //AI의 응답 텍스트를 꺼내옴
       const aiText = data.choices?.[0]?.message?.content || "응답 실패!";
       //기존 메세지 배열 뒤에 AI의 응답을 붙여 새로운 메세지 배열 생성
-      const updated = [...newMessages, { from: "ai", text: aiText }];
+      const updated = [...messages, { from: "ai", text: aiText }];
+      
       //currentKey 날짜에 해당하는 대화에 받아온 AI 응답 추가
       setChatMessagesByDate(prev => ({ ...prev, [currentKey]: updated }));
 
@@ -394,6 +398,7 @@ function ChatDiary() {
     </div>
   );
 }
+
 
 /* 사이트 URL을 /20250407 이런식으로 오늘 날짜를 바꿔주는 용도 - 사이트 들어갔을 때 항상 오늘의 채팅 화면이 뜰 수 있게 하기 위해서 */
 function NavigateToToday() {
