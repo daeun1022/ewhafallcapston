@@ -6,6 +6,7 @@ export default function DiaryPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [summary, setSummary] = useState("");
+  const [loading, setLoading] = useState(true); // 로딩 상태 추가
 
   const getTodayKey = () => {
     const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
@@ -43,6 +44,7 @@ export default function DiaryPage() {
 
     const fetchSummary = async () => {
       try {
+        setLoading(true);
         const res = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
           headers: {
@@ -74,6 +76,8 @@ export default function DiaryPage() {
       } catch (err) {
         console.error("요약 오류:", err);
         setSummary("요약 실패");
+      } finally {
+        setLoading(false); // 완료되든 실패하든 로딩 끝
       }
     };
 
@@ -99,7 +103,7 @@ export default function DiaryPage() {
               <div className="spring-ring" key={i}></div>
             ))}
           </div>
-          <div className="diary-summary-text">{summary}</div>
+          <div className="diary-summary-text">{loading ? "일기쓰는 중..." : summary}</div>
         </div>
       </div>
     </div>
