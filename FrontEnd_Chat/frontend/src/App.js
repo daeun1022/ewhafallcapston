@@ -9,6 +9,9 @@ import DiaryPage from "./Diary";
 import CalendarPage from "./Calendar";
 import SignupPage from "./Signup";
 //login
+import { signOut } from "firebase/auth";
+import { auth } from "./firebase"; 
+//db
 import { db } from "./firebase";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 
@@ -31,7 +34,20 @@ const getTodayKey = () => {
   return kst.toISOString().split("T")[0];
 };
 
+//로그아웃 함수 정의
+const LogOut = () => {
+  signOut(auth)
+  .then(()=>{
+    console.log('로그아웃 성공');
+  })
+  .catch((error) => {
+    console.error('로그아웃 실패',error);
+  });
+};
+
+
 function ChatDiary() {
+
   /* URL 경로에 있는 dateKey 값을 갖고옴 ex.20250407 */
   const { dateKey } = useParams();
 
@@ -302,6 +318,33 @@ function ChatDiary() {
     setChatLog(prev => prev.filter(entry => entry.date !== currentKey));
   };
 
+  //로그아웃 함수 정의
+  const LogOut = () => {
+    signOut(auth)
+    .then(() => {
+      console.log('로그아웃 성공');
+    })
+    .catch((error) => {
+      console.error('로그아웃 실패', error);
+    });
+  };
+
+  const handleLogout = () => {
+    if (auth.currentUser) {
+      signOut(auth)
+        .then(() => {
+          console.log("로그아웃 완료");
+          navigate("/signup");
+        })
+        .catch((error) => {
+          console.error("로그아웃 오류:", error);
+        });
+    } else {
+      // 로그인 안 된 상태일 때
+      navigate("/signup");
+    }
+  };
+
   /* 전체적인 인터페이스 */
   return (
     <div className="container">
@@ -346,7 +389,13 @@ function ChatDiary() {
                   <X className="icon cursor-pointer" size={16} style={{ position: "absolute", top: 20, right: 20 }} onClick={() => setUserBoxOpen(false)} />
                 </div>
                 <button className="mypage-button" onClick={() => setUserBoxOpen(false)}>회원정보 수정</button>
-                <button className="logout-button" onClick={() => setUserBoxOpen(false)}>로그아웃</button>
+                <button 
+                className="logout-button" 
+                onClick={() => 
+                {LogOut(); //추가. + { }
+                setUserBoxOpen(false);
+                navigate("/login");
+                }}>로그아웃</button>
               </div>
             )}
             {/* 달력 */}
