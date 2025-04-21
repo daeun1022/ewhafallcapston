@@ -8,6 +8,12 @@ import LoginPage from "./Login";
 import DiaryPage from "./Diary";
 import CalendarPage from "./Calendar";
 import SignupPage from "./Signup";
+//login
+import { signOut } from "firebase/auth";
+import { auth } from "./firebase"; 
+//db
+import { db } from "./firebase";
+import { collection, addDoc, Timestamp } from "firebase/firestore";
 
 /* lucid-react에서 감정 이모티콘 갖고 옴 */
 const moodIcons = {
@@ -28,7 +34,20 @@ const getTodayKey = () => {
   return kst.toISOString().split("T")[0];
 };
 
+//로그아웃 함수 정의
+const LogOut = () => {
+  signOut(auth)
+  .then(()=>{
+    console.log('로그아웃 성공');
+  })
+  .catch((error) => {
+    console.error('로그아웃 실패',error);
+  });
+};
+
+
 function ChatDiary() {
+
   /* URL 경로에 있는 dateKey 값을 갖고옴 ex.20250407 */
   const { dateKey } = useParams();
 
@@ -206,7 +225,8 @@ function ChatDiary() {
       //AI의 응답 텍스트를 꺼내옴
       const aiText = data.choices?.[0]?.message?.content || "응답 실패!";
       //기존 메세지 배열 뒤에 AI의 응답을 붙여 새로운 메세지 배열 생성
-      const updated = [...newMessages, { from: "ai", text: aiText }];
+      const updated = [...messages, { from: "ai", text: aiText }];
+      
       //currentKey 날짜에 해당하는 대화에 받아온 AI 응답 추가
       setChatMessagesByDate(prev => ({ ...prev, [currentKey]: updated }));
 
@@ -298,6 +318,33 @@ function ChatDiary() {
     setChatLog(prev => prev.filter(entry => entry.date !== currentKey));
   };
 
+  //로그아웃 함수 정의
+  const LogOut = () => {
+    signOut(auth)
+    .then(() => {
+      console.log('로그아웃 성공');
+    })
+    .catch((error) => {
+      console.error('로그아웃 실패', error);
+    });
+  };
+
+  const handleLogout = () => {
+    if (auth.currentUser) {
+      signOut(auth)
+        .then(() => {
+          console.log("로그아웃 완료");
+          navigate("/signup");
+        })
+        .catch((error) => {
+          console.error("로그아웃 오류:", error);
+        });
+    } else {
+      // 로그인 안 된 상태일 때
+      navigate("/signup");
+    }
+  };
+
   /* 전체적인 인터페이스 */
   return (
     <div className="container">
@@ -342,7 +389,13 @@ function ChatDiary() {
                   <X className="icon cursor-pointer" size={16} style={{ position: "absolute", top: 20, right: 20 }} onClick={() => setUserBoxOpen(false)} />
                 </div>
                 <button className="mypage-button" onClick={() => setUserBoxOpen(false)}>회원정보 수정</button>
-                <button className="logout-button" onClick={() => setUserBoxOpen(false)}>로그아웃</button>
+                <button 
+                className="logout-button" 
+                onClick={() => 
+                {LogOut(); //추가. + { }
+                setUserBoxOpen(false);
+                navigate("/login");
+                }}>로그아웃</button>
               </div>
             )}
             {/* 달력 */}
@@ -394,6 +447,7 @@ function ChatDiary() {
     </div>
   );
 }
+
 
 /* 사이트 URL을 /20250407 이런식으로 오늘 날짜를 바꿔주는 용도 - 사이트 들어갔을 때 항상 오늘의 채팅 화면이 뜰 수 있게 하기 위해서 */
 function NavigateToToday() {
