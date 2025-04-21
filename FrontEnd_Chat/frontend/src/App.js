@@ -290,7 +290,12 @@ function ChatDiary() {
           model: "gpt-4o",
           messages: [
             // 대화 요약 프롬프트
-            { role: "system", content: "다음 대화를 한 줄로 요약해줘. 25자 이내로." },
+            { role: "system", 
+              content: `다음 대화를 **20자 이내**의 한 줄로 요약해줘.
+              요약은 명사형으로 끝나야 하고, 대화문 형식이 아닌 평서문 형태로 적어줘.
+              요약의 내용은 사용자가 가장 강한 감정을 느낀 사건과 관련이 있어야 해.
+              예를 들어 사용자가 시험을 망쳐서 기분이 안좋았고, 그 다음 카페에 갔다고 하면 시험을 망쳐서 화난 기분과 카페에 가서 좋은 기분 중 더 강하게 느껴진 감정의 사건을 요약해서 적어줘.
+              끝에 [.] 쓰지 마.` },
             // 대화 내용 전달
             { role: "user", content }
           ]
@@ -378,7 +383,7 @@ function ChatDiary() {
       <div className="right-section">
         {/* 상단바 기능 */}
         <div className="top-bar">
-          <div className="title">ChatBot Diary</div>
+          <div className="title" style={{ cursor: "pointer" }} onClick={() => navigate(`/`)}>ChatBot Diary</div>
           <div className="top-bar-right">
             {/* 유저 아이콘 기능 */}
             <User className="icon clickable" onClick={() => setUserBoxOpen(!userBoxOpen)} />

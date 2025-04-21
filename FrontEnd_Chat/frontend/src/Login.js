@@ -43,13 +43,10 @@ export default function LoginPage() {
 
         {error && <p className="error-message">{error}</p>}
 
-        <button className="login-button" onClick={handleLogin}>로그인</button>
-      </div>
-
-      <div className="bottom-links">
-        <button onClick={() => navigate("/find-id")}>아이디 찾기</button>
-        <button onClick={() => navigate("/find-password")}>비밀번호 찾기</button>
-        <button onClick={() => navigate("/signup")}>회원가입</button>
+        <div className="login-buttons">
+          <button className="login-button" onClick={handleLogin}>로그인</button>
+          <button className="login-button" onClick={() => navigate("/signup")}>회원가입</button>
+        </div>
       </div>
     </div>
   );

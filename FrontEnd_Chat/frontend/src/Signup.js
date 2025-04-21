@@ -12,7 +12,7 @@ export default function SignupPage() {
   const [passwordError, setPasswordError] = useState("");
 
   //회원가입 성공 메시지용 상태추가
-  const [SignupSucess, setSignupSucess] = useState("");
+  const [SignupSuccess, setSignupSuccess] = useState("");
 
   //Firebase 인증객체
   const auth = getAuth();
@@ -141,7 +141,7 @@ export default function SignupPage() {
         <button type="submit" className="signup-submit">회원가입</button>
         
          {/* ✅ 회원가입 성공 메시지 표시 */}
-         {signupSuccess && <div className="success-message">{signupSuccess}</div>}
+         {SignupSuccess && <div className="success-message">{SignupSuccess}</div>}
       </form>
     </div>
   );
