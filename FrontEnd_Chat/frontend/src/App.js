@@ -13,7 +13,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "./firebase"; 
 //db
 import { db } from "./firebase";
-import { collection, addDoc, Timestamp } from "firebase/firestore";
+import { doc, getDocs, setDoc, collection, onSnapshot } from "firebase/firestore";
 
 /* lucid-react에서 감정 이모티콘 갖고 옴 */
 const moodIcons = {
@@ -50,6 +50,10 @@ function ChatDiary() {
 
   /* URL 경로에 있는 dateKey 값을 갖고옴 ex.20250407 */
   const { dateKey } = useParams();
+ 
+  //Firestore 컬렉션 참조
+  const chatLogRef = collection(db, 'chatLog');
+  const chatMessagesRef = collection(db, 'chatMessagesByDate');
 
   /*dateKey 가 없다면 getTodayKey로 오늘날짜 호출 & 있다면 2025-04-07 형식으로 바꿔 currentKey로 설정 */
   const currentKey = useMemo(() => {
@@ -60,31 +64,65 @@ function ChatDiary() {
   /* 현재 보고있는 날짜가 오늘인지 아닌지 확인 - 지나간 날짜의 채팅창을 막기 위해서 */
   const isToday = currentKey === getTodayKey();
 
-  /* local storage에서 chatLog를 불러옴 있으면 JSON 형태의 문자열로 없으면 null로 불러온 값을 chatLog의 초기 상태로 사용 */
-  const [chatLog, setChatLog] = useState(() => {
-    const saved = localStorage.getItem("chatLog");
-    return saved ? JSON.parse(saved) : [];
-  });
+    // chatLog 상태 초기화 및 Firestore에서 데이터 로드
+    const [chatLog, setChatLog] = useState([]);
+    useEffect(() => {
+      const fetchChatLog = async () => {
+        const snapshot = await getDocs(chatLogRef);
+        const logs = snapshot.docs.map(doc => doc.data());
+        setChatLog(logs);
+      };
+      fetchChatLog();
+    }, []);
 
-  /* 감정 및 대화 내용 요약(ChatLog)을 날짜별로 localStorage에 저장 */
+      // chatMessagesByDate 상태 초기화 및 Firestore에서 데이터 로드
+  const [chatMessagesByDate, setChatMessagesByDate] = useState({});
   useEffect(() => {
-    localStorage.setItem("chatLog", JSON.stringify(chatLog));
-  }, [chatLog]);
+    const fetchChatMessages = async () => {
+      const snapshot = await getDocs(chatMessagesRef);
+      const messages = {};
+      snapshot.docs.forEach(doc => {
+        messages[doc.id] = doc.data().messages;
+      });
+      setChatMessagesByDate(messages);
+    };
+    fetchChatMessages();
+  }, []);
 
-  /* local storage에서 chatMessagesByDate를 불러옴 있으면 JSON 형태의 문자열로 없으면 null로 - 날짜별로 채팅 메시지 관리 가능 */
-  /* {"2025-04-07": [{ from: "user", text: "안녕?" }, ...]} 형식 */
-  const [chatMessagesByDate, setChatMessagesByDate] = useState(() => {
-    const saved = localStorage.getItem("chatMessagesByDate");
-    return saved ? JSON.parse(saved) : {};
-  });
+    // chatLog 상태가 변경될 때 Firestore에 업데이트
+    useEffect(() => {
+      const updateChatLog = async () => {
+        chatLog.forEach(async (log) => {
+          const docRef = doc(chatLogRef, log.date);
+          await setDoc(docRef, log);
+        });
+      };
+      if (chatLog.length > 0) {
+        updateChatLog();
+      }
+    }, [chatLog]);
 
-  /* 전체 채팅기록을 날짜별로 localStorage에 저장 */
+     // chatMessagesByDate 상태가 변경될 때 Firestore에 업데이트
   useEffect(() => {
-    localStorage.setItem("chatMessagesByDate", JSON.stringify(chatMessagesByDate));
+    const updateChatMessages = async () => {
+      for (const [date, messages] of Object.entries(chatMessagesByDate)) {
+        const docRef = doc(chatMessagesRef, date);
+        await setDoc(docRef, { messages });
+      }
+    };
+    if (Object.keys(chatMessagesByDate).length > 0) {
+      updateChatMessages();
+    }
   }, [chatMessagesByDate]);
 
-  /* chatMessagesByDate[currentKey]를 찾아 해당 날짜의 대화 배열을 반환 */
-  const messages = useMemo(() => chatMessagesByDate[currentKey] || [], [chatMessagesByDate, currentKey]);
+   // messages 상태 설정
+   const messages = useMemo(() => chatMessagesByDate[currentKey] || [], [chatMessagesByDate, currentKey]);
+
+   // 오늘 날짜의 키를 반환하는 함수
+   function getTodayKey() {
+     const today = new Date();
+     return today.toISOString().split('T')[0];
+   }
 
   /* chatMessagesByDate가 바뀔때마다 useEffect 수행 - const today로 오늘날짜의 기록을 갖고 오는데 없다면 빈 채팅창을 표시 (12시 넘었을 때 빈화면 보여주기 위해) */
   useEffect(() => {
