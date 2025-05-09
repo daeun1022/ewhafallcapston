@@ -206,10 +206,10 @@ export default function DiaryPage() {
     <div className="diary-wrapper">
       <div
         className="diary-fixed-title"
-        onClick={() => navigate("/")}
+        onClick={() => navigate("/today")}
         tabIndex={0}
         role="button"
-        onKeyDown={(e) => e.key === "Enter" && navigate("/")}
+        onKeyDown={(e) => e.key === "Enter" && navigate("/today")}
       >
         ChatBot Diary
       </div>
