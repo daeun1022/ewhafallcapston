@@ -57,6 +57,7 @@ export default function DiaryPage() {
 
     const fetchSummary = async () => {
       try {
+        console.log("📌 fetchSummary 실행 시작");
         setLoading(true);
         const res = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
@@ -90,6 +91,7 @@ export default function DiaryPage() {
         });
 
         const data = await res.json();
+        console.log("GPT 요약 응답:", data);
         const aiSummary = data.choices?.[0]?.message?.content?.trim();
         setSummary(aiSummary || "요약 실패");
       } catch (err) {

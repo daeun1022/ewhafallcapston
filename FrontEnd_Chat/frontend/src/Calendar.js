@@ -177,32 +177,40 @@ export default function CalendarPage() {
         </div>
       
         <div className="calendar-right-page">
-          <div className="chart-wrapper">
-            <select
-            value={selectedEmotion}
-            onChange={(e) => setSelectedEmotion(e.target.value)}
-            style={{ marginBottom: "1rem", padding: "0.5rem" }}>
-              {["Angry", "Annoyed", "Laugh", "Smile", "Frown", "Meh"].map(emotion => (
-              <option key={emotion} value={emotion}>
-                {emotion}
-              </option>
-            ))}
-          </select>
-            <LineChart data={ChartData}/>
-          </div>
-          <div className="calendar-monthly-emotions">
-            <h3>이번 달 감정 요약</h3>
-            <ul>
-              {Object.entries(monthlyEmotionCounts).map(([emotion, count]) => (
-                <li key={emotion} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span>{moodIcons[emotion]}</span>
-                  <span>{emotion}: {count}회</span>
-                </li>
+          <div className="chart-and-summary">
+            <div className="chart-wrapper">
+              <select
+              value={selectedEmotion}
+              onChange={(e) => setSelectedEmotion(e.target.value)}
+              style={{ marginBottom: "1rem", padding: "0.5rem" }}>
+                {["Angry", "Annoyed", "Laugh", "Smile", "Frown", "Meh"].map(emotion => (
+                <option key={emotion} value={emotion}>
+                  {emotion}
+                </option>
               ))}
-            </ul>
+              </select>
+              <LineChart data={ChartData}/>
+            </div>
+            <div className="calendar-monthly-emotions">
+              <h3>이번 달 감정 요약</h3>
+              <ul>
+                {Object.entries(monthlyEmotionCounts).map(([emotion, count]) => (
+                  <li key={emotion} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span>{moodIcons[emotion]}</span>
+                    <span>{emotion}: {count}회</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div className="calendar-summary-footer">
+            <h4>이번 달 요약</h4>
+            <p>🏆 가장 많이 느낀 감정: aaa</p>
+            <p>📊 평균 감정: bbb</p>
           </div>
         </div>
-    </div> 
-  </div>
+      </div> 
+    </div>
   );
 }

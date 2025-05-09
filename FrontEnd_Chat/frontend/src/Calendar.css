@@ -35,7 +35,7 @@ body {
     height: 88vh;
     padding-bottom: 5rem;
     box-sizing: border-box;
-    flex: 1;
+    flex: 2;
     max-width: 1000px; 
 }  
 
@@ -143,11 +143,19 @@ body {
 
 .calendar-right-page {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-items: flex-start;
     gap: 24px;
     margin-top: 32px;
     justify-content: center;
+    width: 760px;
+}
+
+.chart-and-summary {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 24px;
 }
   
 .chart-wrapper {
@@ -188,6 +196,16 @@ body {
 .calendar-monthly-emotions li {
     margin-top: 15px;
     font-size: 1.1rem;
+}
+
+.calendar-summary-footer {
+    margin-top: 1rem;
+    width: 740px;
+    padding: 1rem;
+    background-color: #f0f0f0;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    line-height: 1.5;
 }
 
 .calendar-arrow {
