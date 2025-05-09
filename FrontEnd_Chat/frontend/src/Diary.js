@@ -1,13 +1,25 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { Angry, Annoyed, Laugh, Smile, Frown, Meh } from "lucide-react";
 import "./Diary.css";
 
 export default function DiaryPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [summary, setSummary] = useState("");
-  const [emotion, setEmotion] = useState("");
+  const [mainemotion, setMainEmotion] = useState("");
+  const [mainemotiontext, setMainEmotionText] = useState("");
+  const [subemotion, setSubEmotion] = useState("");
   const [loading, setLoading] = useState(true); // 로딩 상태 추가
+
+  const moodIcons = {
+    Angry: <Angry className="icon emotion-icon" />,
+    Annoyed: <Annoyed className="icon emotion-icon" />,
+    Laugh: <Laugh className="icon emotion-icon" />,
+    Smile: <Smile className="icon emotion-icon" />,
+    Frown: <Frown className="icon emotion-icon" />,
+    Meh: <Meh className="icon emotion-icon" />,
+  };
 
   const getTodayKey = () => {
     const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
@@ -88,7 +100,7 @@ export default function DiaryPage() {
       }
     };
 
-    const fetchEmotion = async () => {
+    const fetchMainEmotion = async () => {
       try {
         const res = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
@@ -100,9 +112,73 @@ export default function DiaryPage() {
             model: "gpt-4o",
             messages: [
               { role: "system", 
-                content: `다음 대화에서 사용자 감정을 하나 이상 추출해 나열해줘.
-                - 가장 핵심적인 감정을 먼저 알려줘. 오늘의 핵심 감정은 OO 입니다. 라는 형식으로 써줘.
-                - 그리고 줄바꿈 후 그 다음으로 격렬하게 느껴진 감정 총 4개를 순서대로 적어줘.
+                content: `대화에서 사용자 감정을 하나 뽑아줘. (Angry, Annoyed, Laugh, Smile, Frown, Meh 중에서).
+                - 감정을 적을 때 이 감정이 얼마나 강하게 느껴졌는지 100점 만점 중 몇 점을 가지는 지로 표현해줘.
+                - 표현 형식은 감정 이름 (점수) 이런 식이야.` },
+              { role: "user", content }
+            ]
+          })
+        });
+
+        const data = await res.json();
+        const MainEmotion = data.choices?.[0]?.message?.content?.trim();
+
+        const detectedEmotion = ["Angry", "Annoyed", "Laugh", "Smile", "Frown", "Meh"]
+      .find(emotion => MainEmotion.includes(emotion));
+
+        setMainEmotion(detectedEmotion || "메인 감정 분석 실패");
+      } catch (err) {
+        console.error("메인 감정 분석 오류:", err);
+        setMainEmotion("메인 감정 분석 실패");
+      }
+    };
+
+    const fetchMainEmotionText = async () => {
+      try {
+        const res = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4o",
+            messages: [
+              { role: "system", 
+                content: `다음 대화에서 사용자의 감정을 분석해서 설명해줘.
+                - 가장 핵심적인 감정을 하나 고르고, 그 감정을 중심으로 어떤 사건 때문에 그렇게 느꼈는지 설명해줘.
+                - 예: 오늘의 감정은 웃음(Laugh)입니다. 친구를 만나 웃긴 이야기를 나누며 많이 웃었기 때문입니다.
+                - 감정 이름은 Angry, Annoyed, Laugh, Smile, Frown, Meh 중에서 선택해줘.
+                - 결과는 한 문장 또는 두 문장 이내로 작성해줘.
+                - 이모지나 말줄임표는 쓰지 말아줘.` },
+              { role: "user", content }
+            ]
+          })
+        });
+
+        const data = await res.json();
+        const MainEmotionText = data.choices?.[0]?.message?.content?.trim();
+        setMainEmotionText(MainEmotionText || "메인 감정 텍스트 분석 실패");
+      } catch (err) {
+        console.error("메인 감정 텍스트 분석 오류:", err);
+        setMainEmotionText("메인 감정 텍스트 분석 실패");
+      }
+    };
+
+    const fetchSubEmotion = async () => {
+      try {
+        const res = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4o",
+            messages: [
+              { role: "system", 
+                content: `다음 대화에서 사용자 감정을 4개 추출해 나열해줘.
+                - 이때 4개의 감정 중에는 아까 추출한 핵심 감정이 포함되면 안돼.
                 - 이모지나 설명 없이 감정 단어만 콤마로 나열해줘.
                 - 감정을 적을 때 이 감정이 얼마나 강하게 느껴졌는지 100점 만점 중 몇 점을 가지는 지로 표현해줘.
                 - 표현 형식은 감정 이름 (점수), 감정 이름 (점수) 이런 식이야.` },
@@ -112,16 +188,18 @@ export default function DiaryPage() {
         });
 
         const data = await res.json();
-        const emotionText = data.choices?.[0]?.message?.content?.trim();
-        setEmotion(emotionText || "감정 분석 실패");
+        const subemotionText = data.choices?.[0]?.message?.content?.trim();
+        setSubEmotion(subemotionText || "서브 감정 분석 실패");
       } catch (err) {
-        console.error("감정 분석 오류:", err);
-        setEmotion("감정 분석 실패");
+        console.error("서브 감정 분석 오류:", err);
+        setSubEmotion("서브 감정 분석 실패");
       }
     };
 
     fetchSummary();
-    fetchEmotion();
+    fetchMainEmotion();
+    fetchMainEmotionText();
+    fetchSubEmotion();
   }, [queryDate]);
 
   return (
@@ -146,7 +224,17 @@ export default function DiaryPage() {
           <div className="diary-summary">
             <div className="diary-summary-date">{getFormattedKoreanDate(queryDate)}</div>
             <div className="diary-summary-text">{loading ? "일기쓰는 중..." : summary}</div>
-            <div className="diary-summary-emotion">{loading ? "" : emotion}</div>
+            {!loading && (
+              <div className="diary-summary-main-emotion">
+                {moodIcons[mainemotion]}
+                <span style={{ marginLeft: "8px" }}>{mainemotiontext}</span>
+              </div>
+            )}
+            {!loading && (
+            <div className="diary-summary-sub-emotion">
+              {subemotion}
+            </div>
+          )}
           </div>
         </div>
       </div>

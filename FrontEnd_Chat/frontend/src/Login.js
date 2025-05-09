@@ -11,11 +11,20 @@ export default function LoginPage() {
   const [error, setError] = useState("");
 
   const handleLogin = async () => {
+    console.log("clicked");
+  
+    console.log("email:", email);
+    console.log("password:", password);
+    console.log("auth:", auth);
+  
     setError("");
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      navigate("/"); // 로그인 성공 시 App.js가 보여지는 경로로 이동
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      console.log("로그인 성공:", result);
+      const todayKey = new Date().toISOString().split("T")[0].replace(/-/g, "");
+      navigate(`/${todayKey}`);
     } catch (err) {
+      console.error("로그인 실패:", err);
       setError("이메일 또는 비밀번호가 잘못되었습니다.");
     }
   };

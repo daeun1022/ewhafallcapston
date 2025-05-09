@@ -1,5 +1,4 @@
 body {
-    background-color: #fefee9;
     margin: 0;
     padding: 0;
     font-family: "Noto Sans KR", sans-serif;
@@ -13,7 +12,6 @@ body {
   }
   
   .diary-background {
-    background-color: #fefee9;
     width: 100%;
     height: 100%;
     display: flex;
@@ -87,7 +85,21 @@ body {
     line-height: 2;
   }
 
-  .diary-summary-emotion{
+  .diary-summary-main-emotion{
+    margin-top: 50px;
+    padding: 30px 10px;
+    line-height: 2;
+    border: 1px solid black;
+    border-radius : 0.8rem;
+  }
+
+  .diary-summary-main-emotion .icon{
+    color: rgb(1, 62, 1);
+    width: 50px;
+    height: 50px;
+  }
+
+  .diary-summary-sub-emotion{
     padding-top: 50px;
     line-height: 2;
   }

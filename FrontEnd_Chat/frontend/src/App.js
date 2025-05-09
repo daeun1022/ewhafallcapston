@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { Angry, Annoyed, Laugh, Smile, Frown, Meh,User, Calendar, Bot, Send, X } from "lucide-react";
-import { BrowserRouter, Routes, Route, useNavigate, useParams } from "react-router-dom";
+import { Routes, Route, useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "./components/ui/button";
 import "./App.css";
@@ -421,7 +421,7 @@ function ChatDiary() {
       <div className="right-section">
         {/* 상단바 기능 */}
         <div className="top-bar">
-          <div className="title" style={{ cursor: "pointer" }} onClick={() => navigate(`/`)}>ChatBot Diary</div>
+          <div className="title" style={{ cursor: "pointer" }} onClick={() => navigate(`/today`)}>ChatBot Diary</div>
           <div className="top-bar-right">
             {/* 유저 아이콘 기능 */}
             <User className="icon clickable" onClick={() => setUserBoxOpen(!userBoxOpen)} />
@@ -505,15 +505,14 @@ function NavigateToToday() {
 /* 다른 페이지로 이동 */
 export default function WrappedApp() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<NavigateToToday />} />
-        <Route path=":dateKey" element={<ChatDiary />} />
-        <Route path="/diary" element={<DiaryPage />} />
-        <Route path="/calendar" element={<CalendarPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-      </Routes>
-    </BrowserRouter>
+    <Routes>
+      <Route path="/" element={<LoginPage />} />             {/* 시작화면 */}
+      <Route path="/today" element={<NavigateToToday />} />
+      <Route path=":dateKey" element={<ChatDiary />} />
+      <Route path="/diary" element={<DiaryPage />} />
+      <Route path="/calendar" element={<CalendarPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
+    </Routes>
   );
 }

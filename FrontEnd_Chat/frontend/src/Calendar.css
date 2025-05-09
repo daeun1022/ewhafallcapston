@@ -1,28 +1,43 @@
-/* Calendar.css */
 body {
     margin: 0;
-    background-color: #feffed; /* 원하는 색상으로 변경 가능 */
     font-family: Arial, sans-serif;
   }
 
-.calendar-container {
+.calendar-page{
     display: flex;
     flex-direction: column;
-    height: 100vh;
     margin-left: 5rem;
     margin-right: 5rem;
     padding-top: 2rem;
-    padding-bottom: 5rem;
-    box-sizing: border-box;
 }
 
 .calendar-title {
+    height: 50px;
     cursor: pointer;
     font-weight: bold;
-    font-size: 1.5rem;
+    font-size: 2.0rem;
+    margin-left: -2rem;
     margin-bottom: 1rem;
     color: #0f5a0b;
-  }  
+  }
+
+.calendar-container{
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 40px;
+}
+
+.calendar-left-page {
+    display: flex;
+    flex-direction: column;
+    height: 88vh;
+    padding-bottom: 5rem;
+    box-sizing: border-box;
+    flex: 1;
+    max-width: 1000px; 
+}  
 
 .calendar-header {
     display: flex;
@@ -83,17 +98,16 @@ body {
 }
 
 .calendar-day {
+    position: relative;
     display: flex;
-    justify-content: flex-start;   /* 왼쪽 정렬 */
-    align-items: flex-start;       /* 위쪽 정렬 */
-    padding: 2px;                  /* 전체 패딩 */
-    padding-top: 4px;              /* 위쪽 간격만 살짝 */
-    font-size: 0.95rem;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding: 6px;
     height: 100%;
     width: 100%;
-    border-radius : 1rem;
+    border-radius: 1rem;
     box-sizing: border-box;
-}
+  }
 
 .calendar-day:hover {
     background-color: #b4e8b0;
@@ -113,12 +127,70 @@ body {
 }
 
 .calendar-date {
-    margin-top: 4px;     /* 위에 살짝 간격 주기 */
-    margin-left: 16px;
-    font-size: 25px;
+    position: relative;
+    z-index: 1;
+    font-size: 20px;
   }
 
-  .calendar-arrow {
+.calendar-left-page .calendar-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50px;
+    height: 50px;
+}
+
+.calendar-right-page {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 24px;
+    margin-top: 32px;
+    justify-content: center;
+}
+  
+.chart-wrapper {
+    width: 500px;
+    height: 350px;
+    border: 1px solid rgb(199, 199, 199);
+    border-radius: 25px;
+}
+
+.chart-wrapper select{
+    margin-left: 150px;
+    margin-top: 30px;
+    width: 200px;
+    padding: 0.3rem 0.5rem;
+    font-size: 1rem;
+    text-align: center;       
+    text-align-last: center;  
+}
+
+.calendar-monthly-emotions {
+    right: 40px;
+    top: 100px; 
+    width: 200px;
+    height: 318px;
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 1rem;
+    font-size: 14px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+  
+.calendar-monthly-emotions h3 {
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+}
+
+.calendar-monthly-emotions li {
+    margin-top: 15px;
+    font-size: 1.1rem;
+}
+
+.calendar-arrow {
     background-color: #0f5a0b;
     color: white;
     border: none;
@@ -127,9 +199,9 @@ body {
     font-size: 1.2rem;
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.2s ease;
-  }
-  
-  .calendar-arrow:hover {
+}
+
+.calendar-arrow:hover {
     background-color: #0c4709;
     transform: scale(1.1);
-  }
+}
