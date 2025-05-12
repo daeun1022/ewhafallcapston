@@ -1,8 +1,8 @@
 // Calendar.js
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Angry, Annoyed, Laugh, Smile, Frown, Meh } from "lucide-react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc } from "firebase/firestore";
 import { db } from "./firebase";
 import "./Calendar.css";
 import LineChart from "./LineChart.js";
@@ -18,6 +18,7 @@ export default function CalendarPage() {
   const firstDay = new Date(year, month, 1).getDay(); // 0: Sunday
   const [monthlyEmotionCounts, setMonthlyEmotionCounts] = useState({});
   const [selectedEmotion, setSelectedEmotion] = useState("Meh");
+  const [streakKeywords, setStreakKeywords] = useState("");
 
   const goToPrevMonth = () => {
     const prevMonth = new Date(year, month - 1);
@@ -43,6 +44,7 @@ export default function CalendarPage() {
   };
 
   const [chatLog, setChatLog] = useState([]);
+  const [chatMessagesByDate, setChatMessagesByDate] = useState({});
 
   const weeklyEmotionCounts = useMemo(() => {
     const counts = [0, 0, 0, 0, 0]; // 1~5주차
@@ -71,11 +73,120 @@ export default function CalendarPage() {
     }];
   }, [weeklyEmotionCounts, selectedEmotion]);
 
+  const emotionStreak = useMemo(() => {
+    const sortedLogs = [...chatLog].sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    let maxStreak = 1;
+    let currentStreak = 1;
+    let streakMood = null;
+    let startDate = null;
+    let endDate = null;
+    let tempStart = sortedLogs[0]?.date || null;
+
+    for (let i = 1; i < sortedLogs.length; i++) {
+      const prev = sortedLogs[i - 1];
+      const curr = sortedLogs[i];
+      if (!prev.date || !prev.mood || !curr.date || !curr.mood) continue;
+
+      const prevDate = new Date(prev.date);
+      const currDate = new Date(curr.date);
+      const diff = (currDate - prevDate) / (1000 * 60 * 60 * 24); // days
+
+      if (curr.mood === prev.mood && diff === 1) {
+        currentStreak++;
+      } else {
+        currentStreak = 1;
+        tempStart = curr.date; // 새 시작점
+      }
+
+      if (currentStreak > maxStreak || (currentStreak === maxStreak && new Date(curr.date) > new Date(endDate))) {
+        maxStreak = currentStreak;
+        streakMood = curr.mood;
+        startDate = tempStart;
+        endDate = curr.date;
+      }
+    }
+  
+    if (!startDate || !endDate) return null;
+  
+    const dayDiff = Math.floor((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1;
+  
+    return { mood: streakMood, days: maxStreak, startDate, endDate, dayDiff };
+  }, [chatLog]);  
+
+  function formatDate(isoStr) {
+    const d = new Date(isoStr);
+    return `${d.getMonth() + 1}월 ${d.getDate()}일`;
+  }
+
+  const emotionTendency = useMemo(() => {
+    const pos = (monthlyEmotionCounts.Smile || 0) + (monthlyEmotionCounts.Laugh || 0);
+    const neg = (monthlyEmotionCounts.Angry || 0) + (monthlyEmotionCounts.Annoyed || 0) + (monthlyEmotionCounts.Frown || 0);
+    const meh = monthlyEmotionCounts.Meh || 0;
+  
+    const total = pos + neg + meh;
+    if (total === 0) return null; // 데이터 없음
+  
+    const posRatio = pos / total;
+    const negRatio = neg / total;
+    const mehRatio = meh / total;
+  
+    let result = "";
+    if (posRatio >= negRatio && posRatio >= mehRatio) {
+      result = "😊 이번 한달은 전체적으로 긍정적인 달이었던 것 같아요!";
+    } else if (negRatio >= posRatio && negRatio >= mehRatio) {
+      result = "😞 이번 한달은 전체적으로 부정적인 달이었던 것 같아요...";
+    } else {
+      result = "😐 이번 한달은 별 일 없는 평범한 달이었던 것 같아요.";
+    }
+  
+    return { result, posRatio, negRatio, mehRatio };
+  }, [monthlyEmotionCounts]);
+
+  const streakMessages = useMemo(() => {
+    if (!emotionStreak) return [];
+  
+    const { startDate, endDate } = emotionStreak;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const messages = [];
+  
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const key = d.toISOString().split("T")[0];
+      if (chatMessagesByDate[key]) {
+        messages.push(...chatMessagesByDate[key]);
+      }
+    }
+  
+    return messages;
+  }, [emotionStreak, chatMessagesByDate]);
+
   useEffect(() => {
     const fetchChatLog = async () => {
       const snapshot = await getDocs(collection(db, "chatLog"));
       const logs = snapshot.docs.map(doc => doc.data());
+
+      logs.push(
+        { date: "2025-05-01", mood: "Angry" },
+        { date: "2025-05-02", mood: "Angry" },
+        { date: "2025-05-03", mood: "Smile" },
+        { date: "2025-05-04", mood: "Annoyed" },
+        { date: "2025-05-05", mood: "Meh" },
+        { date: "2025-05-06", mood: "Meh" },
+        { date: "2025-05-07", mood: "Smile" },
+        { date: "2025-05-08", mood: "Smile" },
+        { date: "2025-05-09", mood: "Smile" },
+        { date: "2025-05-10", mood: "Smile" },
+        { date: "2025-05-11", mood: "Frown" }
+      );
       setChatLog(logs);
+
+      const uniqueLogsMap = new Map();
+      logs.forEach(log => {
+        uniqueLogsMap.set(log.date, log);
+      });
+      const uniqueLogs = Array.from(uniqueLogsMap.values());
+      setChatLog(uniqueLogs);
   
       // 감정 통계 계산
       const currentMonth = `${year}-${String(month + 1).padStart(2, "0")}`;
@@ -88,7 +199,7 @@ export default function CalendarPage() {
         Meh: 0
       };
   
-      logs.forEach(log => {
+      uniqueLogs.forEach(log => {
         if (log.date?.startsWith(currentMonth) && counts.hasOwnProperty(log.mood)) {
           counts[log.mood]++;
         }
@@ -99,6 +210,58 @@ export default function CalendarPage() {
   
     fetchChatLog();
   }, [year, month]);
+
+  useEffect(() => {
+    const insertTestData = async () => {
+      const testMessages = {
+        "2025-05-07": [
+          { "from": "user", "text": "오늘 출근길에 날씨 진짜 좋았어. 햇살 덕분에 기분도 괜히 좋아짐" },
+          { "from": "ai", "text": "와 햇살 받으면서 걷는 거 개기분 좋지! 하루 시작 기가 막혔네!" },
+          { "from": "user", "text": "지하철 자리도 딱 나 있어서 편하게 감 ㅋㅋ" },
+          { "from": "ai", "text": "이건 그냥 출근 운 챌린지 만렙각ㅋㅋ 대박이다" }
+        ],
+        "2025-05-08": [
+          { "from": "user", "text": "회사에서 점심으로 연어덮밥 시켰는데 진짜 맛있었음…" },
+          { "from": "ai", "text": "연어는 못 참지 ㅋㅋ 입안에서 살살 녹았겠다" },
+          { "from": "user", "text": "먹으면서 팀원이랑 수다 떨었는데 괜히 웃음 많았던 날이었음" },
+          { "from": "ai", "text": "그런 날은 하루 종일 마음이 말랑해지더라 ㅋㅋ 잘 보냈네 진짜" }
+        ],
+        "2025-05-09": [
+          { "from": "user", "text": "오늘 일은 좀 많았지만 다 끝내고 나니까 뿌듯하더라" },
+          { "from": "ai", "text": "와 그거 진짜 성취감 터지는 날이지. 고생했어 진심" },
+          { "from": "user", "text": "퇴근하면서 카페 들러서 디저트도 하나 사 먹었어!" },
+          { "from": "ai", "text": "완벽한 하루 마무리네. 이런 하루는 저장각임" }
+        ],
+        "2025-05-10": [
+          { "from": "user", "text": "주말이라 늦잠 자고 천천히 산책 나갔는데 공기도 좋고 사람도 별로 없었어" },
+          { "from": "ai", "text": "그게 진짜 힐링이지~ 아무것도 안 해도 좋은 날ㅋㅋ" },
+          { "from": "user", "text": "벤치에 앉아서 멍 때리다가 음악 들으니까 마음이 좀 편해졌어" },
+          { "from": "ai", "text": "그 순간이 진짜 소중하지… 마음이 웃고 있었겠다 😊" }
+        ]        
+      };
+  
+      for (const [date, messages] of Object.entries(testMessages)) {
+        await setDoc(doc(db, "chatMessagesByDate", date), { messages });
+      }
+  
+      console.log("✅ 테스트용 메시지 삽입 완료");
+    };
+  
+    insertTestData();
+  }, []);
+
+  useEffect(() => {
+    const fetchMessagesByDate = async () => {
+      const snapshot = await getDocs(collection(db, "chatMessagesByDate"));
+      const messages = {};
+      snapshot.forEach(doc => {
+        messages[doc.id] = doc.data().messages;
+      });
+      setChatMessagesByDate(messages);
+    };
+  
+    fetchMessagesByDate();
+  }, []);
 
   const emotionByDate = useMemo(() => {
     const map = {};
@@ -148,7 +311,76 @@ export default function CalendarPage() {
     );
   }
 
-  console.log("ChartData:", ChartData);
+  const [streakComment, setStreakComment] = useState("");
+
+  useEffect(() => {
+    if (!emotionStreak || streakMessages.length === 0) return;
+
+    const content = streakMessages.map(m => m.text).join("\n");
+
+    const fetchComment = async () => {
+      try {
+        const res = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "gpt-4o",
+            messages: [
+              {
+                role: "system",
+                content: `
+                다음 채팅 기록은 사용자의 감정이 계속 유지되던 며칠간의 대화야.
+                너가 명심해야 할 건 이건 특정 날짜에 대한 코멘트가 아니라 한 달 간의 감정 통계를 보고 내리는 코멘트라는 거야.
+                그러니까 오늘같은 단어는 쓰지 말고, 이번 달 같은 단어 위주로 쓰도록 해.
+                어떤 사건이나 말이 사용자의 감정에 영향을 줬는지 자연스럽게 추론해서 친구처럼 코멘트를 달아줘.
+                계속 이어진 사용자의 감정이 긍정적 감정이라면 신난 친구에게 동조하듯이 써야 해.
+                반대로 계속 이어진 사용자의 감정이 부정적 감정이라면 사용자를 위로해줘야 해.
+                문장은 1~2줄로 간단하게 써줘. 반말, 현실적인 반응, 유행어 써도 좋아.
+                사용자의 감정에 가장 영향을 미쳤다고 판단되는 사건같은 걸 꼭 언급하도록 해.
+                예를 들어 사용자가 운좋게 이벤트에 당첨되었다면 이벤트 당첨이라니 진짜 행운이다ㅋㅋㅋ 같은 느낌으로 써줘.`
+              },
+              { role: "user", content }
+            ]
+          })
+        });
+
+        const data = await res.json();
+        const comment = data.choices?.[0]?.message?.content?.trim() || "";
+        setStreakComment(comment);
+
+        const keywordRes = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "gpt-4o",
+            messages: [
+              {
+                role: "system",
+                content: `다음 대화에서 자주 등장하는 키워드 2개 혹은 3개를 뽑아줘.
+                  꼭 명사 형태로만, 쉼표로 구분해서 알려줘. 예: 산책, 알바, 카페`
+              },
+              { role: "user", content }
+            ]
+          })
+        });
+
+        const keywordData = await keywordRes.json();
+        const keywordRaw = keywordData.choices?.[0]?.message?.content?.trim() || "";
+        setStreakKeywords(keywordRaw);
+
+      } catch (err) {
+        console.error("코멘트 또는 키워드 생성 실패", err);
+      }
+    };
+
+    fetchComment();
+  }, [emotionStreak, streakMessages]);
 
   return (
     <div className="calendar-page">
@@ -205,9 +437,28 @@ export default function CalendarPage() {
           </div>
 
           <div className="calendar-summary-footer">
-            <h4>이번 달 요약</h4>
-            <p>🏆 가장 많이 느낀 감정: aaa</p>
-            <p>📊 평균 감정: bbb</p>
+            <h3><i>" Monthly Report "</i></h3>
+            {emotionTendency && (
+              <p>
+                {emotionTendency.result}
+                <br/>
+                (긍정적인 감정 비율: {(emotionTendency.posRatio * 100).toFixed(1)}%, 
+                부정적인 감정 비율: {(emotionTendency.negRatio * 100).toFixed(1)}%, 
+                기타: {(emotionTendency.mehRatio * 100).toFixed(1)}%)
+              </p>
+            )}
+
+            {emotionStreak && (
+              <div style={{ lineHeight: "1.6", fontWeight: "500" }}>
+                <p>
+                  {formatDate(emotionStreak.startDate)}부터 {formatDate(emotionStreak.endDate)}까지
+                  <span style={{marginLeft: "7px"}}>{emotionStreak.dayDiff}일 동안 {emotionStreak.mood} 상태가 길게 나타났어요</span>
+                  {streakKeywords && (<p style={{ marginTop: "0.4rem", fontSize: "1.1rem", color: "#444" }}>
+                    🔍 이 기간동안 자주 언급된 키워드: <b>{streakKeywords}</b></p>)}
+                </p>
+                {streakComment && <p>📌 {streakComment}</p>}
+              </div>
+            )}
           </div>
         </div>
       </div> 

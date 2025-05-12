@@ -12,6 +12,7 @@ body {
 }
 
 .calendar-title {
+    width: 300px;
     height: 50px;
     cursor: pointer;
     font-weight: bold;
@@ -30,13 +31,18 @@ body {
 }
 
 .calendar-left-page {
+    background-color: #fafafa;
+    border: 1px solid white;
+    border-radius: 3rem;
     display: flex;
     flex-direction: column;
     height: 88vh;
-    padding-bottom: 5rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    padding-bottom: 3rem;
     box-sizing: border-box;
     flex: 2;
-    max-width: 1000px; 
+    height: 800px;
 }  
 
 .calendar-header {
@@ -81,6 +87,8 @@ body {
     font-size: 18px;
     font-weight: bold;
     padding: 0.5rem 0;
+    border-bottom: 2px solid rgb(69, 69, 69);
+    margin-bottom: 3px;
 }
 
 .calendar-grid {
@@ -95,6 +103,8 @@ body {
     grid-template-columns: repeat(7, 1fr);
     flex-grow: 1;
     gap: 0.5rem; /* 요 줄 추가하면 요일 칸끼리 간격 생김 */
+    border-bottom: 1px solid #ccc; /* ← 이 줄 추가 */
+    padding-bottom: 0.5rem;        /* 선택 사항: 줄 간격 주기 */
 }
 
 .calendar-day {
@@ -199,13 +209,25 @@ body {
 }
 
 .calendar-summary-footer {
-    margin-top: 1rem;
+    margin-top: 0.5rem;
     width: 740px;
+    height: 350px;
     padding: 1rem;
-    background-color: #f0f0f0;
+    background-color: #e4ffe5;
     border-radius: 12px;
-    font-size: 0.95rem;
+    font-size: 1.2rem;
     line-height: 1.5;
+}
+
+.calendar-summary-footer h3{
+    margin-left: 20px;
+    margin-top: 3px;
+    font-size: 1.8rem;
+}
+
+.calendar-summary-footer p{
+    margin-left: 30px;
+    margin-right: 20px;
 }
 
 .calendar-arrow {
