@@ -64,18 +64,18 @@ function ChatDiary() {
   /* 현재 보고있는 날짜가 오늘인지 아닌지 확인 - 지나간 날짜의 채팅창을 막기 위해서 */
   const isToday = currentKey === getTodayKey();
 
-    // chatLog 상태 초기화 및 Firestore에서 데이터 로드
-    const [chatLog, setChatLog] = useState([]);
-    useEffect(() => {
-      const fetchChatLog = async () => {
-        const snapshot = await getDocs(chatLogRef);
-        const logs = snapshot.docs.map(doc => doc.data());
-        setChatLog(logs);
-      };
-      fetchChatLog();
+  // chatLog 상태 초기화 및 Firestore에서 데이터 로드
+  const [chatLog, setChatLog] = useState([]);
+  useEffect(() => {
+    const fetchChatLog = async () => {
+    const snapshot = await getDocs(chatLogRef);
+    const logs = snapshot.docs.map(doc => doc.data());
+     setChatLog(logs);
+    };
+    fetchChatLog();
     }, []);
 
-      // chatMessagesByDate 상태 초기화 및 Firestore에서 데이터 로드
+  // chatMessagesByDate 상태 초기화 및 Firestore에서 데이터 로드
   const [chatMessagesByDate, setChatMessagesByDate] = useState({});
   useEffect(() => {
     const fetchChatMessages = async () => {
