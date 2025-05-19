@@ -14,6 +14,8 @@ import { auth } from "./firebase";
 //db
 import { db } from "./firebase";
 import { doc, getDocs, setDoc, collection, onSnapshot } from "firebase/firestore";
+import { initializeApp } from "firebase/app";
+import { onAuthStateChanged } from "firebase/auth";
 
 /* lucid-react에서 감정 이모티콘 갖고 옴 */
 const moodIcons = {
@@ -45,8 +47,43 @@ const LogOut = () => {
   });
 };
 
+export function ProtectedRoute({ children }) {
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+
+      if (!currentUser) {
+        navigate("/login");
+      }
+    });
+
+    return () => unsubscribe();
+  }, [navigate]);
+
+  if (loading) {
+    return <div>로딩 중...</div>;
+  }
+
+  return user ? children : null;
+}
 
 function ChatDiary() {
+
+   // 로그인 여부 확인 및 보호 라우팅
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        // 로그인하지 않은 사용자 → 강제 이동
+        navigate("/Login");
+      }
+    });
+    return () => unsubscribe(); // 컴포넌트 언마운트 시 정리
+  }, []);
 
   /* URL 경로에 있는 dateKey 값을 갖고옴 ex.20250407 */
   const { dateKey } = useParams();
