@@ -2,6 +2,10 @@ import React, { useState } from "react";
 import "./Signup.css";
 //Auth 관련 import
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { auth, db } from './firebase';
+import { doc, setDoc } from 'firebase/firestore'
+import './Signup.css'
+import { useNavigate } from "react-router-dom";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
@@ -10,6 +14,7 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const navigate = useNavigate();
 
   //회원가입 성공 메시지용 상태추가
   const [SignupSuccess, setSignupSuccess] = useState("");
@@ -59,8 +64,19 @@ export default function SignupPage() {
 
     // 🔧 Firebase 회원가입 시도
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+       // ✅ Firebase Authentication을 통한 회원가입
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    // ✅ [추가] Firestore에 사용자 정보 저장
+    await setDoc(doc(db, "users", user.uid), {
+      email: email,
+      id: id,
+      createdAt: new Date()
+    });
+      //await createUserWithEmailAndPassword(auth, email, password);
       setSignupSuccess("회원가입이 완료되었습니다!");
+      navigate("/login");
 
       // 🔧 입력 필드 초기화
       setEmail("");
