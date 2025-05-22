@@ -13,7 +13,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "./firebase"; 
 //db
 import { db } from "./firebase";
-import { doc, getDocs, setDoc, collection, onSnapshot } from "firebase/firestore";
+import { doc, getDocs, setDoc, collection, onSnapshot, getDoc } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -85,18 +85,46 @@ function ChatDiary() {
     return () => unsubscribe(); // 컴포넌트 언마운트 시 정리
   }, []);
 
-  /* URL 경로에 있는 dateKey 값을 갖고옴 ex.20250407 */
-  const { dateKey } = useParams();
- 
-  //Firestore 컬렉션 참조
-  const chatLogRef = collection(db, 'chatLog');
-  const chatMessagesRef = collection(db, 'chatMessagesByDate');
+  const [chatMessagesByDate, setchatMessagesByDate] = useState({});
+    /*dateKey 가 없다면 getTodayKey로 오늘날짜 호출 & 있다면 2025-04-07 형식으로 바꿔 currentKey로 설정 */
 
-  /*dateKey 가 없다면 getTodayKey로 오늘날짜 호출 & 있다면 2025-04-07 형식으로 바꿔 currentKey로 설정 */
+    /* URL 경로에 있는 dateKey 값을 갖고옴 ex.20250407 */
+  const { dateKey } = useParams();
+
   const currentKey = useMemo(() => {
     if (!dateKey) return getTodayKey();
     return `${dateKey.slice(0, 4)}-${dateKey.slice(4, 6)}-${dateKey.slice(6)}`;
   }, [dateKey]);
+
+  // ✅ 특정 날짜(currentKey)의 메시지만 불러오기
+useEffect(() => {
+  const fetchMessagesForCurrentDate = async () => {
+    try {
+      const docRef = doc(chatMessagesRef, currentKey);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setchatMessagesByDate(prev => ({
+          ...prev,
+          [currentKey]: data.messages || []
+        }));
+      } else {
+        setchatMessagesByDate(prev => ({
+          ...prev,
+          [currentKey]: []
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching messages for current date:', error);
+    }
+  };
+  fetchMessagesForCurrentDate();
+}, [currentKey]);
+ 
+  //Firestore 컬렉션 참조
+  const chatLogRef = collection(db, 'chatLog');
+  const chatMessagesRef = collection(db, 'chatMessagesByDate');
 
   /* 현재 보고있는 날짜가 오늘인지 아닌지 확인 - 지나간 날짜의 채팅창을 막기 위해서 */
   const isToday = currentKey === getTodayKey();
@@ -111,20 +139,6 @@ function ChatDiary() {
     };
     fetchChatLog();
     }, []);
-
-  // chatMessagesByDate 상태 초기화 및 Firestore에서 데이터 로드
-  const [chatMessagesByDate, setChatMessagesByDate] = useState({});
-  useEffect(() => {
-    const fetchChatMessages = async () => {
-      const snapshot = await getDocs(chatMessagesRef);
-      const messages = {};
-      snapshot.docs.forEach(doc => {
-        messages[doc.id] = doc.data().messages;
-      });
-      setChatMessagesByDate(messages);
-    };
-    fetchChatMessages();
-  }, []);
 
     // chatLog 상태가 변경될 때 Firestore에 업데이트
     useEffect(() => {
@@ -161,20 +175,21 @@ function ChatDiary() {
      return today.toISOString().split('T')[0];
    }
 
-  /* chatMessagesByDate가 바뀔때마다 useEffect 수행 - const today로 오늘날짜의 기록을 갖고 오는데 없다면 빈 채팅창을 표시 (12시 넘었을 때 빈화면 보여주기 위해) */
-  useEffect(() => {
-    const today = getTodayKey();
-    if (!chatMessagesByDate[today]) {
-      setChatMessagesByDate(prev => ({ ...prev, [today]: [] }));
-    }
-  }, [chatMessagesByDate]);
+ 
+// 오늘 날짜가 없으면 빈 배열 추가 (chatMessagesByDate가 비어있지 않을 때만)
+useEffect(() => {
+  const today = getTodayKey();
+  if (!chatMessagesByDate[today] && Object.keys(chatMessagesByDate).length > 0) {
+    setchatMessagesByDate(prev => ({ ...prev, [today]: [] }));
+  }
+}, [chatMessagesByDate]);
 
-  /* currentKey 혹은 chatMessagesByDate가 바뀔때마다 useEffect 수행 - currentKey를 기준으로 해당 날짜의 기록이 없다면 빈 채팅창을 표시 (달력에서 대화기록이 없는 날짜를 선택시 빈 채팅창을 보여주기 위해) */
-  useEffect(() => {
-    if (!chatMessagesByDate[currentKey]) {
-      setChatMessagesByDate(prev => ({ ...prev, [currentKey]: [] }));
-    }
-  }, [currentKey , chatMessagesByDate]);
+// currentKey에 해당하는 날짜가 없으면 빈 배열 추가 (단, chatMessagesByDate가 비어있지 않을 때만)
+useEffect(() => {
+  if (!chatMessagesByDate[currentKey] && Object.keys(chatMessagesByDate).length > 0) {
+    setchatMessagesByDate(prev => ({ ...prev, [currentKey]: [] }));
+  }
+}, [currentKey , chatMessagesByDate]);
 
   /* 페이지 이동을 위한 함수 ex. /Diary -> 달력 페이지로 이동 */
   const navigate = useNavigate();
@@ -237,7 +252,7 @@ function ChatDiary() {
     if (input.trim() === "" || !isToday) return;
     const userMessage = { from: "user", text: input };
     const newMessages = [...messages, userMessage];
-    setChatMessagesByDate(prev => ({ ...prev, [currentKey]: newMessages }));
+    setchatMessagesByDate(prev => ({ ...prev, [currentKey]: newMessages }));
     setInput("");
 
     /* 채팅 AI 프롬프트 */
@@ -303,7 +318,7 @@ function ChatDiary() {
       const updated = [...newMessages, { from: "ai", text: aiText }];
       
       //currentKey 날짜에 해당하는 대화에 받아온 AI 응답 추가
-      setChatMessagesByDate(prev => ({ ...prev, [currentKey]: updated }));
+      setchatMessagesByDate(prev => ({ ...prev, [currentKey]: updated }));
 
       // 전체 대화 내용을 기반으로 감정 분석 및 대화내용 요약 진행
       const mood = await detectEmotion(updated);
@@ -394,7 +409,7 @@ function ChatDiary() {
 
   /* 오늘 기록 초기화 선택시 오늘 날짜의 모든 대화기록을 초기화 시키는 용도 */
   const handleReset = () => {
-    setChatMessagesByDate(prev => ({ ...prev, [currentKey]: [] }));
+    setchatMessagesByDate(prev => ({ ...prev, [currentKey]: [] }));
     setChatLog(prev => prev.filter(entry => entry.date !== currentKey));
   };
 
