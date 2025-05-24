@@ -292,12 +292,52 @@ export default function DiaryPage() {
                 placeholder="수정하고 싶은 내용을 적어주세요."
               />
             )}
-            <button className="diary-feedback-button" onClick={() => {
+            <button className="diary-feedback-button" onClick={async() => {
                 if (!showFeedback) {
                   // 첫 번째 클릭
                   setShowFeedback(true);
                 } else {
                   // 두 번째 클릭
+
+                    // 추가: 피드백 내용이 비어있으면 전송하지 않고 경고
+                    if (!feedbackText.trim()) {
+                      alert("피드백 내용을 입력해주세요.");
+                      return;
+                    }
+                    
+                    
+                    try {
+                      // OpenAI API에 보낼 메시지 포맷 생성
+                      const chatHistory = [
+                        { role: "user",
+                          content: feedbackText,
+                        }
+                      ];
+
+                      // fetch 요청
+                      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                          Authorization: `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
+                        },
+                        body: JSON.stringify({
+                          model: "gpt-4o",
+                          messages: chatHistory,
+                        }),
+                      });
+
+                      if (!response.ok) {
+                        throw new Error(`API 요청 실패: ${response.statusText}`);
+                      }
+
+                      const data = await response.json();
+                      console.log("OpenAI 응답:", data);
+                        } catch (error) {
+                          console.error("피드백 전송 실패:", error);
+                          alert("피드백 전송에 실패했습니다. 다시 시도해주세요.");  
+                        }
+
                   alert("피드백이 전송되었습니다");
                   setFeedbackSent(true);
                   setShowFeedback(false);
