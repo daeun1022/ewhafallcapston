@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "./firebase";
 import "./Login.css";
+import { setPersistence, browserSessionPersistence } from "firebase/auth";
+
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -19,6 +21,10 @@ export default function LoginPage() {
   
     setError("");
     try {
+
+      // 로그인 지속성을 session으로 설정
+    await setPersistence(auth, browserSessionPersistence);
+
       const result = await signInWithEmailAndPassword(auth, email, password);
       console.log("로그인 성공:", result);
       const todayKey = new Date().toISOString().split("T")[0].replace(/-/g, "");
