@@ -255,6 +255,10 @@ useEffect(() => {
     setchatMessagesByDate(prev => ({ ...prev, [currentKey]: newMessages }));
     setInput("");
 
+     // Firestore에도 직접 저장
+  const docRef = doc(chatMessagesRef, currentKey);
+  await setDoc(docRef, { messages: newMessages });
+
     /* 채팅 AI 프롬프트 */
     const chatHistory = [
       { role: "system", 
