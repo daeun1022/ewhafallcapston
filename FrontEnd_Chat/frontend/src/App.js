@@ -467,7 +467,7 @@ useEffect(() => {
             ))}
         </div>
         <Button className="diary-button" onClick={() => navigate(`/diary?date=${currentKey}`)}>일기화면으로 이동하기</Button>
-        <Button className="reset-button" onClick={handleReset}>오늘 기록 초기화</Button>
+        {/*<Button className="reset-button" onClick={handleReset}>오늘 기록 초기화</Button>*/}
       </div>
 
       <div className="right-section">
@@ -478,20 +478,8 @@ useEffect(() => {
             {/* 유저 아이콘 기능 */}
             <User className="icon clickable" onClick={() => setUserBoxOpen(!userBoxOpen)} />
             {userBoxOpen && (
-              <div className="user-menu">
-                <div className="w-full relative">
-                  <span className="text-sm font-bold" style={{fontWeight:600, fontSize: 20}}>마이페이지</span>
-                  <X className="icon cursor-pointer" size={16} style={{ position: "absolute", top: 20, right: 20 }} onClick={() => setUserBoxOpen(false)} />
-                </div>
-                <button className="mypage-button" onClick={() => setUserBoxOpen(false)}>회원정보 수정</button>
-                <button 
-                className="logout-button" 
-                onClick={() => 
-                {LogOut(); //추가. + { }
-                setUserBoxOpen(false);
-                navigate("/login");
+                <button className="logout-button" onClick={() => {LogOut(); //추가. + { }setUserBoxOpen(false);navigate("/login");
                 }}>로그아웃</button>
-              </div>
             )}
             {/* 달력 */}
             <Calendar className="icon clickable" onClick={() => navigate("/calendar")} />

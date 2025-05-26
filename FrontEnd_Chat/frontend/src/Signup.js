@@ -112,21 +112,8 @@ export default function SignupPage() {
             value={email}
             onChange={handleEmailChange}
           />
-          <button type="button" className="side-button">이메일 보내기</button>
         </div>
         {emailError && <div className="error-message">{emailError}</div>}
-
-        {/* 아이디 */}
-        <label>아이디</label>
-        <div className="input-wrapper">
-          <input
-            type="text"
-            className="signup-input"
-            value={id}
-            onChange={(e) => setId(e.target.value)}
-          />
-          <button type="button" className="side-button">중복 확인</button>
-        </div>
 
         {/* 비밀번호 */}
         <label>비밀번호</label>
