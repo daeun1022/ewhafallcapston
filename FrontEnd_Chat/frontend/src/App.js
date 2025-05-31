@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { Angry, Annoyed, Laugh, Smile, Frown, Meh,User, Calendar, Bot, Send, X } from "lucide-react";
+import { Angry, Annoyed, Laugh, Smile, Frown, Meh, User, Calendar, Bot, Send, X } from "lucide-react";
 import { Routes, Route, useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "./components/ui/button";
@@ -10,10 +10,10 @@ import CalendarPage from "./Calendar";
 import SignupPage from "./Signup";
 //login
 import { signOut } from "firebase/auth";
-import { auth } from "./firebase"; 
+import { auth } from "./firebase";
 //db
 import { db } from "./firebase";
-import { doc, getDocs, setDoc, collection, onSnapshot, getDoc } from "firebase/firestore";
+import { doc, getDocs, setDoc, collection, onSnapshot, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -39,12 +39,12 @@ const getTodayKey = () => {
 //로그아웃 함수 정의
 const LogOut = () => {
   signOut(auth)
-  .then(()=>{
-    console.log('로그아웃 성공');
-  })
-  .catch((error) => {
-    console.error('로그아웃 실패',error);
-  });
+    .then(() => {
+      console.log('로그아웃 성공');
+    })
+    .catch((error) => {
+      console.error('로그아웃 실패', error);
+    });
 };
 
 export function ProtectedRoute({ children }) {
@@ -74,7 +74,7 @@ export function ProtectedRoute({ children }) {
 
 function ChatDiary() {
 
-   // 로그인 여부 확인 및 보호 라우팅
+  // 로그인 여부 확인 및 보호 라우팅
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (!user) {
@@ -85,10 +85,16 @@ function ChatDiary() {
     return () => unsubscribe(); // 컴포넌트 언마운트 시 정리
   }, []);
 
-  const [chatMessagesByDate, setchatMessagesByDate] = useState({});
-    /*dateKey 가 없다면 getTodayKey로 오늘날짜 호출 & 있다면 2025-04-07 형식으로 바꿔 currentKey로 설정 */
+   // 오늘 날짜의 키를 반환하는 함수
+  function getTodayKey() {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  }
 
-    /* URL 경로에 있는 dateKey 값을 갖고옴 ex.20250407 */
+  const [chatMessagesByDate, setchatMessagesByDate] = useState({});
+  /*dateKey 가 없다면 getTodayKey로 오늘날짜 호출 & 있다면 2025-04-07 형식으로 바꿔 currentKey로 설정 */
+
+  /* URL 경로에 있는 dateKey 값을 갖고옴 ex.20250407 */
   const { dateKey } = useParams();
 
   const currentKey = useMemo(() => {
@@ -97,31 +103,31 @@ function ChatDiary() {
   }, [dateKey]);
 
   // ✅ 특정 날짜(currentKey)의 메시지만 불러오기
-useEffect(() => {
-  const fetchMessagesForCurrentDate = async () => {
-    try {
-      const docRef = doc(chatMessagesRef, currentKey);
-      const docSnap = await getDoc(docRef);
+  useEffect(() => {
+    const fetchMessagesForCurrentDate = async () => {
+      try {
+        const docRef = doc(chatMessagesRef, currentKey);
+        const docSnap = await getDoc(docRef);
 
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setchatMessagesByDate(prev => ({
-          ...prev,
-          [currentKey]: data.messages || []
-        }));
-      } else {
-        setchatMessagesByDate(prev => ({
-          ...prev,
-          [currentKey]: []
-        }));
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setchatMessagesByDate(prev => ({
+            ...prev,
+            [currentKey]: data.messages || []
+          }));
+        } else {
+          setchatMessagesByDate(prev => ({
+            ...prev,
+            [currentKey]: []
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching messages for current date:', error);
       }
-    } catch (error) {
-      console.error('Error fetching messages for current date:', error);
-    }
-  };
-  fetchMessagesForCurrentDate();
-}, [currentKey]);
- 
+    };
+    fetchMessagesForCurrentDate();
+  }, [currentKey]);
+
   //Firestore 컬렉션 참조
   const chatLogRef = collection(db, 'chatLog');
   const chatMessagesRef = collection(db, 'chatMessagesByDate');
@@ -133,63 +139,72 @@ useEffect(() => {
   const [chatLog, setChatLog] = useState([]);
   useEffect(() => {
     const fetchChatLog = async () => {
-    const snapshot = await getDocs(chatLogRef);
-    const logs = snapshot.docs.map(doc => doc.data());
-     setChatLog(logs);
+      const snapshot = await getDocs(chatLogRef);
+      const logs = snapshot.docs.map(doc => doc.data());
+      setChatLog(logs);
     };
     fetchChatLog();
-    }, []);
+  }, []);
 
-    // chatLog 상태가 변경될 때 Firestore에 업데이트
-    useEffect(() => {
-      const updateChatLog = async () => {
-        chatLog.forEach(async (log) => {
-          const docRef = doc(chatLogRef, log.date);
-          await setDoc(docRef, log);
-        });
-      };
-      if (chatLog.length > 0) {
-        updateChatLog();
-      }
-    }, [chatLog]);
+  // chatLog 상태가 변경될 때 Firestore에 업데이트
+  useEffect(() => {
+    const updateChatLog = async () => {
+      chatLog.forEach(async (log) => {
+        const docRef = doc(chatLogRef, log.date);
+        await setDoc(docRef, log);
+      });
+    };
+    if (chatLog.length > 0) {
+      updateChatLog();
+    }
+  }, [chatLog]);
 
-     // chatMessagesByDate 상태가 변경될 때 Firestore에 업데이트
+  // chatMessagesByDate 상태가 변경될 때 Firestore에 업데이트
   useEffect(() => {
     const updateChatMessages = async () => {
       for (const [date, messages] of Object.entries(chatMessagesByDate)) {
-        const docRef = doc(chatMessagesRef, date);
-        await setDoc(docRef, { messages });
+      const docRef = doc(chatMessagesRef, date);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        // 새 메시지만 추출해서 arrayUnion으로 추가
+        const existingMessages = docSnap.data().messages || [];
+
+        const newMessages = messages.slice(existingMessages.length); // 추가된 부분만 추출
+
+        for (const message of newMessages) {
+          await updateDoc(docRef, {
+            messages: arrayUnion(message),
+          });
+        }
+      } else {
+        await setDoc(docRef, { messages }); // 새 문서 생성
       }
-    };
-    if (Object.keys(chatMessagesByDate).length > 0) {
-      updateChatMessages();
+    }
+  };
+  if (Object.keys(chatMessagesByDate).length > 0) {
+    updateChatMessages();
+  }  
+        
+  }, [chatMessagesByDate]);
+
+  // messages 상태 설정
+  const messages = useMemo(() => chatMessagesByDate[currentKey] || [], [chatMessagesByDate, currentKey]);
+
+  // 오늘 날짜가 없으면 빈 배열 추가 (chatMessagesByDate가 비어있지 않을 때만)
+  useEffect(() => {
+    const today = getTodayKey();
+    if (!chatMessagesByDate[today] && Object.keys(chatMessagesByDate).length > 0) {
+      setchatMessagesByDate(prev => ({ ...prev, [today]: [] }));
     }
   }, [chatMessagesByDate]);
 
-   // messages 상태 설정
-   const messages = useMemo(() => chatMessagesByDate[currentKey] || [], [chatMessagesByDate, currentKey]);
-
-   // 오늘 날짜의 키를 반환하는 함수
-   function getTodayKey() {
-     const today = new Date();
-     return today.toISOString().split('T')[0];
-   }
-
- 
-// 오늘 날짜가 없으면 빈 배열 추가 (chatMessagesByDate가 비어있지 않을 때만)
-useEffect(() => {
-  const today = getTodayKey();
-  if (!chatMessagesByDate[today] && Object.keys(chatMessagesByDate).length > 0) {
-    setchatMessagesByDate(prev => ({ ...prev, [today]: [] }));
-  }
-}, [chatMessagesByDate]);
-
-// currentKey에 해당하는 날짜가 없으면 빈 배열 추가 (단, chatMessagesByDate가 비어있지 않을 때만)
-useEffect(() => {
-  if (!chatMessagesByDate[currentKey] && Object.keys(chatMessagesByDate).length > 0) {
-    setchatMessagesByDate(prev => ({ ...prev, [currentKey]: [] }));
-  }
-}, [currentKey , chatMessagesByDate]);
+  // currentKey에 해당하는 날짜가 없으면 빈 배열 추가 (단, chatMessagesByDate가 비어있지 않을 때만)
+  useEffect(() => {
+    if (!chatMessagesByDate[currentKey] && Object.keys(chatMessagesByDate).length > 0) {
+      setchatMessagesByDate(prev => ({ ...prev, [currentKey]: [] }));
+    }
+  }, [currentKey, chatMessagesByDate]);
 
   /* 페이지 이동을 위한 함수 ex. /Diary -> 달력 페이지로 이동 */
   const navigate = useNavigate();
@@ -203,7 +218,7 @@ useEffect(() => {
       }
     }, 10 * 1000); // 10초마다 체크
     return () => clearInterval(interval);
-  }, [currentKey, isToday, navigate]);  
+  }, [currentKey, isToday, navigate]);
 
   /* currentKey를 기반으로 todayMessages를 갖고 오고 해당 currentKey 가 getTodayKey와 같을 경우(오늘 날짜일 경우) 감정분석하고 요약해서 chatLog에 반영 - 과거 날짜의 감정 및 대화 내용 요약은 해당 일자가 지나면 더이상 바뀌지 않도록 */
   useEffect(() => {
@@ -246,7 +261,7 @@ useEffect(() => {
       return prev;
     });
   };
-  
+
   /* 사용자가 메세지 입력시 채팅창에 해당 메세지를 추가하고 입력창을 비워줌 - 만약 isToday가 아니라면(오늘 날짜가 아니라면) 채팅창 입력을 막음 */
   const handleSend = async () => {
     if (input.trim() === "" || !isToday) return;
@@ -255,14 +270,15 @@ useEffect(() => {
     setchatMessagesByDate(prev => ({ ...prev, [currentKey]: newMessages }));
     setInput("");
 
-     // Firestore에도 직접 저장
-  const docRef = doc(chatMessagesRef, currentKey);
-  await setDoc(docRef, { messages: newMessages });
+    // Firestore에도 직접 저장
+    const docRef = doc(chatMessagesRef, currentKey);
+    await setDoc(docRef, { messages: newMessages });
 
     /* 채팅 AI 프롬프트 */
     const chatHistory = [
-      { role: "system", 
-      content:  `
+      {
+        role: "system",
+        content: `
           친한 친구와 대화하듯 자연스럽고 편한 반말을 사용할 것
           20대 초중반이 자주 쓰는 말투와 표현을 기준으로 대화할 것
           줄임말, 유행어, 인터넷 밈(예: ㄹㅇ, ㅇㅈ, 개~, 짭, 무조건 ㄱㄱ, ㅅㅂ, ㅋㅋ 등)을 자주 사용할 것
@@ -320,7 +336,7 @@ useEffect(() => {
       const aiText = data.choices?.[0]?.message?.content || "응답 실패!";
       //기존 메세지 배열 뒤에 AI의 응답을 붙여 새로운 메세지 배열 생성
       const updated = [...newMessages, { from: "ai", text: aiText }];
-      
+
       //currentKey 날짜에 해당하는 대화에 받아온 AI 응답 추가
       setchatMessagesByDate(prev => ({ ...prev, [currentKey]: updated }));
 
@@ -330,7 +346,7 @@ useEffect(() => {
       // 감정 분석 및 대화내용 요약 후 왼쪽 메뉴의 ChatLog 에 저장
       updateChatLog(currentKey, mood, summary);
 
-    //오류 발생시 콘솔창에 오류 출력
+      //오류 발생시 콘솔창에 오류 출력
     } catch (e) {
       console.error(e);
     }
@@ -384,7 +400,8 @@ useEffect(() => {
           model: "gpt-4o",
           messages: [
             // 대화 요약 프롬프트
-            { role: "system", 
+            {
+              role: "system",
               content: `다음 대화를 **20자 이내**의 한 줄로 요약해줘.
               요약은 명사형으로 끝나야 하고, 대화문 형식이 아닌 평서문 형태로 적어줘.
               요약의 내용은 사용자가 가장 강한 감정을 느낀 사건과 관련이 있어야 해.
@@ -420,12 +437,12 @@ useEffect(() => {
   //로그아웃 함수 정의
   const LogOut = () => {
     signOut(auth)
-    .then(() => {
-      console.log('로그아웃 성공');
-    })
-    .catch((error) => {
-      console.error('로그아웃 실패', error);
-    });
+      .then(() => {
+        console.log('로그아웃 성공');
+      })
+      .catch((error) => {
+        console.error('로그아웃 실패', error);
+      });
   };
 
   const handleLogout = () => {
@@ -482,8 +499,9 @@ useEffect(() => {
             {/* 유저 아이콘 기능 */}
             <User className="icon clickable" onClick={() => setUserBoxOpen(!userBoxOpen)} />
             {userBoxOpen && (
-                <button className="logout-button" onClick={() => {LogOut(); //추가. + { }setUserBoxOpen(false);navigate("/login");
-                }}>로그아웃</button>
+              <button className="logout-button" onClick={() => {
+                LogOut(); //추가. + { }setUserBoxOpen(false);navigate("/login");
+              }}>로그아웃</button>
             )}
             {/* 달력 */}
             <Calendar className="icon clickable" onClick={() => navigate("/calendar")} />
