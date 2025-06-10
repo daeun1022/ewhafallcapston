@@ -74,7 +74,12 @@ export default function CalendarPage() {
   }, [weeklyEmotionCounts, selectedEmotion]);
 
   const emotionStreak = useMemo(() => {
-    const sortedLogs = [...chatLog].sort((a, b) => new Date(a.date) - new Date(b.date));
+    const sortedLogs = [...chatLog]
+    .filter(log => {
+      const d = new Date(log.date);
+      return d.getFullYear() === year && d.getMonth() === month;
+    })
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
     
     let maxStreak = 1;
     let currentStreak = 1;
@@ -107,7 +112,20 @@ export default function CalendarPage() {
       }
     }
   
-    if (!startDate || !endDate) return null;
+    if (!startDate || !endDate) {
+      // 만약 로그가 하루만 있을 경우 처리
+      if (sortedLogs.length === 1 && sortedLogs[0].mood) {
+        const onlyDate = sortedLogs[0].date;
+        return {
+          mood: sortedLogs[0].mood,
+          days: 1,
+          startDate: onlyDate,
+          endDate: onlyDate,
+          dayDiff: 1
+        };
+      }
+      return null;
+    }
   
     const dayDiff = Math.floor((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1;
   
@@ -165,20 +183,6 @@ export default function CalendarPage() {
     const fetchChatLog = async () => {
       const snapshot = await getDocs(collection(db, "chatLog"));
       const logs = snapshot.docs.map(doc => doc.data());
-
-      logs.push(
-        { date: "2025-05-01", mood: "Angry" },
-        { date: "2025-05-02", mood: "Angry" },
-        { date: "2025-05-03", mood: "Smile" },
-        { date: "2025-05-04", mood: "Annoyed" },
-        { date: "2025-05-05", mood: "Meh" },
-        { date: "2025-05-06", mood: "Meh" },
-        { date: "2025-05-07", mood: "Smile" },
-        { date: "2025-05-08", mood: "Smile" },
-        { date: "2025-05-09", mood: "Smile" },
-        { date: "2025-05-10", mood: "Smile" },
-        { date: "2025-05-11", mood: "Frown" }
-      );
       setChatLog(logs);
 
       const uniqueLogsMap = new Map();
@@ -210,45 +214,6 @@ export default function CalendarPage() {
   
     fetchChatLog();
   }, [year, month]);
-
-  useEffect(() => {
-    const insertTestData = async () => {
-      const testMessages = {
-        "2025-05-07": [
-          { "from": "user", "text": "오늘 출근길에 날씨 진짜 좋았어. 햇살 덕분에 기분도 괜히 좋아짐" },
-          { "from": "ai", "text": "와 햇살 받으면서 걷는 거 개기분 좋지! 하루 시작 기가 막혔네!" },
-          { "from": "user", "text": "지하철 자리도 딱 나 있어서 편하게 감 ㅋㅋ" },
-          { "from": "ai", "text": "이건 그냥 출근 운 챌린지 만렙각ㅋㅋ 대박이다" }
-        ],
-        "2025-05-08": [
-          { "from": "user", "text": "회사에서 점심으로 연어덮밥 시켰는데 진짜 맛있었음…" },
-          { "from": "ai", "text": "연어는 못 참지 ㅋㅋ 입안에서 살살 녹았겠다" },
-          { "from": "user", "text": "먹으면서 팀원이랑 수다 떨었는데 괜히 웃음 많았던 날이었음" },
-          { "from": "ai", "text": "그런 날은 하루 종일 마음이 말랑해지더라 ㅋㅋ 잘 보냈네 진짜" }
-        ],
-        "2025-05-09": [
-          { "from": "user", "text": "오늘 일은 좀 많았지만 다 끝내고 나니까 뿌듯하더라" },
-          { "from": "ai", "text": "와 그거 진짜 성취감 터지는 날이지. 고생했어 진심" },
-          { "from": "user", "text": "퇴근하면서 카페 들러서 디저트도 하나 사 먹었어!" },
-          { "from": "ai", "text": "완벽한 하루 마무리네. 이런 하루는 저장각임" }
-        ],
-        "2025-05-10": [
-          { "from": "user", "text": "주말이라 늦잠 자고 천천히 산책 나갔는데 공기도 좋고 사람도 별로 없었어" },
-          { "from": "ai", "text": "그게 진짜 힐링이지~ 아무것도 안 해도 좋은 날ㅋㅋ" },
-          { "from": "user", "text": "벤치에 앉아서 멍 때리다가 음악 들으니까 마음이 좀 편해졌어" },
-          { "from": "ai", "text": "그 순간이 진짜 소중하지… 마음이 웃고 있었겠다 😊" }
-        ]        
-      };
-  
-      for (const [date, messages] of Object.entries(testMessages)) {
-        await setDoc(doc(db, "chatMessagesByDate", date), { messages });
-      }
-  
-      console.log("✅ 테스트용 메시지 삽입 완료");
-    };
-  
-    insertTestData();
-  }, []);
 
   useEffect(() => {
     const fetchMessagesByDate = async () => {
@@ -314,7 +279,7 @@ export default function CalendarPage() {
   const [streakComment, setStreakComment] = useState("");
 
   useEffect(() => {
-    if (!emotionStreak || streakMessages.length === 0) return;
+    if (!emotionStreak) return;
 
     const content = streakMessages.map(m => m.text).join("\n");
 

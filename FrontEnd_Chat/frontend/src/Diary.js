@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Angry, Annoyed, Laugh, Smile, Frown, Meh } from "lucide-react";
 import "./Diary.css";
-import { doc, setDoc, getDoc } from 'firebase/firestore'; 
+import { doc, setDoc, getDoc, updateDoc, deleteField } from 'firebase/firestore'; 
 import { db } from './firebase'; 
 
 export default function DiaryPage() {
@@ -58,6 +58,16 @@ export default function DiaryPage() {
       console.log("피드백 저장 성공");
     } catch (err) {
       console.error("피드백 저장 실패:", err);
+    }
+  };
+
+  const deleteFeedbackFromFirebase = async (date) => {
+    try {
+      const feedbackRef = doc(db, "feedbackByDate", date);
+      await updateDoc(feedbackRef, { feedback: deleteField() });
+      console.log("피드백 삭제 성공");
+    } catch (err) {
+      console.error("피드백 삭제 실패:", err);
     }
   };
 

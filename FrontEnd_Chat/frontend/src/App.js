@@ -13,7 +13,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "./firebase";
 //db
 import { db } from "./firebase";
-import { doc, getDocs, setDoc, collection, onSnapshot, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
+import { doc, getDocs, setDoc, collection, onSnapshot, getDoc, updateDoc, arrayUnion, deleteDoc } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -32,8 +32,13 @@ const moodPriority = ["Angry", "Annoyed", "Laugh", "Smile", "Frown", "Meh"];
 
 /* kst를 기준으로 현재의 시간을 계산한 뒤 2025-04-07 형식의 String으로 변환 */
 const getTodayKey = () => {
-  const kst = new Date(Date.now() + 9 * 60 * 60 * 1000); // KST = UTC + 9시간
-  return kst.toISOString().split("T")[0];
+  const now = new Date();
+
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const kstOffset = 9 * 60 * 60000; // 9시간 in ms
+  const kstDate = new Date(utc + kstOffset);
+
+  return kstDate.toISOString().split("T")[0];
 };
 
 //로그아웃 함수 정의
@@ -429,9 +434,19 @@ function ChatDiary() {
   });
 
   /* 오늘 기록 초기화 선택시 오늘 날짜의 모든 대화기록을 초기화 시키는 용도 */
-  const handleReset = () => {
+  const handleReset = async() => {
+      // 1. 로컬 상태 초기화
     setchatMessagesByDate(prev => ({ ...prev, [currentKey]: [] }));
     setChatLog(prev => prev.filter(entry => entry.date !== currentKey));
+
+    // 2. Firestore 문서 삭제
+    try {
+      await deleteDoc(doc(chatMessagesRef, currentKey));
+      await deleteDoc(doc(chatLogRef, currentKey));
+      console.log(`"${currentKey}"의 기록이 완전히 초기화되었습니다.`);
+    } catch (error) {
+      console.error("Firestore에서 초기화 실패:", error);
+    }
   };
 
   //로그아웃 함수 정의
