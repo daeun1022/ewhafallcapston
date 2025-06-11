@@ -43,7 +43,32 @@ AI 챗봇과 대화를 나누며 일기를 작성하는 **ChatBot Diary** 프로
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ✨ AI 감정 분석에 대한 사용자 피드백 기능 <br>
 
 ## 코드 및 구조 설명
-
+```
+ewhafallcapston/FrontEnd_Chat/frontend/src/
+│   ├── components/ui                                     
+│   │   ├── button.js                        # Button Component의 구조 저장
+│   │   ├── card.js                          # Card Component의 구조 저장
+│   │   ├── input.js                         # Input Component의 구조 저장
+│   ├── App.js                               # 채팅 화면. AI 챗봇 제공 및 대화 진행
+│   ├── App.css                              # ???
+│   ├── App.test.js                          # ???
+│   ├── Calendar.js                          # 캘린더 화면. 
+│   ├── Calendar.css                         # ???
+│   ├── Diary.js                             # 일기 화면. 채팅 내용을 기반으로 한 일기 생성 및 감정 분석 진행
+│   ├── Diary.css                            # ???
+│   ├── Firebase.js                          # ???
+│   ├── Index.js                             # ???
+│   ├── Index.css                            # ???
+│   ├── LineChart.js                         # 캘린더 화면에 Line Chart 제공. 
+│   ├── LineChart.css                        # ???
+│   ├── Login.js                             # 인트로 화면. 파이어베이스의 유저 데이터를 기반으로 한 로그인 기능 제공
+│   ├── Login.css                            # ???
+│   ├── ReportWebVitals.js                   # ???
+│   ├── SetupTests.js                        # ???
+│   ├── Signup.js                            # 회원가입 화면. 이메일을 기반으로 한 유저 등록 기능 제공
+│   ├── Signup.css                           # ???
+├── .env                                     # OpenAI server 에 연결하기 위한 OpenAPI key 저장
+```
 ## How to Build
 
 ## How to Install
