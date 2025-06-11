@@ -46,27 +46,26 @@ AI 챗봇과 대화를 나누며 일기를 작성하는 **ChatBot Diary** 프로
 ```
 ewhafallcapston/FrontEnd_Chat/frontend/src/
 │   ├── components/ui                                     
-│   │   ├── button.js                        # Button Component의 구조 저장
-│   │   ├── card.js                          # Card Component의 구조 저장
-│   │   ├── input.js                         # Input Component의 구조 저장
+│   │   ├── button.js                        # Button Component의 구조 정의
+│   │   ├── card.js                          # Card Component의 구조 정의
+│   │   ├── input.js                         # Input Component의 구조 정의
 │   ├── App.js                               # 채팅 화면. AI 챗봇 제공 및 대화 진행
-│   ├── App.css                              # ???
-│   ├── App.test.js                          # ???
-│   ├── Calendar.js                          # 캘린더 화면. 
-│   ├── Calendar.css                         # ???
+│   ├── App.css                              # 채팅 화면의 스타일 정의
+│   ├── Calendar.js                          # 캘린더 화면. 일기 화면에서 AI가 추출한 감정들을 모아보고 통계 분석 가능
+│   ├── Calendar.css                         # 캘린더 화면의 스타일 정의
 │   ├── Diary.js                             # 일기 화면. 채팅 내용을 기반으로 한 일기 생성 및 감정 분석 진행
-│   ├── Diary.css                            # ???
-│   ├── Firebase.js                          # ???
-│   ├── Index.js                             # ???
-│   ├── Index.css                            # ???
-│   ├── LineChart.js                         # 캘린더 화면에 Line Chart 제공. 
-│   ├── LineChart.css                        # ???
+│   ├── Diary.css                            # 일기 화면의 스타일 정의
+│   ├── Firebase.js                          # Firebase 초기 설정 및 Firestore/Auth 인스턴스 생성
+│   ├── Index.js                             # 앱 렌더링 시작점 (Router 설정 포함)
+│   ├── Index.css                            # 사이트 전역 스타일 설정
+│   ├── LineChart.js                         # 캘린더 화면에 Line Chart 제공. 각 감정 종류를 data ID로 받아 주차별 통계 계산 및 시각화
+│   ├── LineChart.css                        # Line Chart Component의 스타일 정의
 │   ├── Login.js                             # 인트로 화면. 파이어베이스의 유저 데이터를 기반으로 한 로그인 기능 제공
-│   ├── Login.css                            # ???
-│   ├── ReportWebVitals.js                   # ???
-│   ├── SetupTests.js                        # ???
+│   ├── Login.css                            # 인트로 화면의 스타일 정의
+│   ├── ReportWebVitals.js                   # 웹 성능 측정 함수 (LCP, FID 등 기록)
+│   ├── SetupTests.js                        # jest-dom 매처를 적용하기 위한 테스트 설정 파일
 │   ├── Signup.js                            # 회원가입 화면. 이메일을 기반으로 한 유저 등록 기능 제공
-│   ├── Signup.css                           # ???
+│   ├── Signup.css                           # 회원가입 화면의 스타일 정의
 ├── .env                                     # OpenAI server 에 연결하기 위한 OpenAPI key 저장
 ```
 ## How to Build
