@@ -83,12 +83,12 @@ ewhafallcapston/FrontEnd_Chat/frontend/
 ```
 git init
 git clone https://github.com/daeun1022/ewhafallcapston.git
-cd ewhafallcapston/FrontEnd_Chat/frontend
 ```
 
 ### 2. VSCode에서 패키지 설치
 vs code 실행 후 terminal 창에서 필요한 패키지 설치
 ```
+cd ewhafallcapston/FrontEnd_Chat/frontend
 npm install
 ```
 
@@ -100,7 +100,15 @@ REACT_APP_OPENAI_API_KEY=[OPEN API KEY]
 ```
 
 ## How to Build
+### VSCode에서 실행
+```
+npm run
+```
+<img src=https://github.com/daeun1022/ewhafallcapston/blob/main/Images/%EC%8B%A4%ED%96%89_%EC%84%B1%EA%B3%B5.png> <br> 정상적으로 실행되었다면 위와 같은 화면이 등장함
 
+※ 실행 도중 아래와 같은 에러 메세지가 등장할 수 있음
+<img src=https://github.com/daeun1022/ewhafallcapston/blob/main/Images/%EC%8B%A4%ED%96%89_%EC%97%90%EB%9F%AC%EB%A9%94%EC%84%B8%EC%A7%80.png>
+이는 Webpack Dev Server 내부 설정(onBeforeSetupMiddleware, onAfterSetupMiddleware)에서 발생한 사용 중단(Deprecated) 경고로서 오래된 옵션을 사용 중이라는 알림일 뿐, 실행에는 영향을 주지 않으며 Build는 정상적으로 실행됨
 
 ## How to Test
 
