@@ -135,9 +135,9 @@ npm run
 ```
 <img src=https://github.com/daeun1022/ewhafallcapston/blob/main/Images/%EC%8B%A4%ED%96%89_%EC%84%B1%EA%B3%B5.png> <br> 정상적으로 실행되었다면 위와 같은 화면이 등장함
 
-※ 실행 도중 아래와 같은 에러 메세지가 등장할 수 있음
+**※ 실행 도중 아래와 같은 에러 메세지가 등장할 수 있음**
 <img src=https://github.com/daeun1022/ewhafallcapston/blob/main/Images/%EC%8B%A4%ED%96%89_%EC%97%90%EB%9F%AC%EB%A9%94%EC%84%B8%EC%A7%80.png>
-이는 Webpack Dev Server 내부 설정(onBeforeSetupMiddleware, onAfterSetupMiddleware)에서 발생한 사용 중단(Deprecated) 경고로서 오래된 옵션을 사용 중이라는 알림일 뿐, 실행에는 영향을 주지 않으며 Build는 정상적으로 실행됨
+이는 Webpack Dev Server 내부 설정(onBeforeSetupMiddleware, onAfterSetupMiddleware)에서 발생한 사용 중단(Deprecated) 경고로서 오래된 옵션을 사용 중이라는 알림일 뿐, **실행에는 영향을 주지 않으며 Build는 정상적으로 실행됨**
 
 ## How to Test
 📌  이메일 주소를 이용해 회원가입을 완료한 후, 로그인하여 챗봇과의 대화를 시작한다.<br>
