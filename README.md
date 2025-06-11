@@ -13,13 +13,13 @@ AI 챗봇과 대화를 나누며 일기를 작성하는 **ChatBot Diary** 프로
 ### Pain Point
 : 스트레스 원인 파악의 어려움, 시간 부족, 사회적 고립, 프라이버시 보장에 관한 걱정
 ### Solution
-: 💚 **AI 챗봇 활용** <br>
+: 💚 **AI 챗봇 활용** <br><br>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ✨ 프라이버시 걱정 없는 대화 상대 <br>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ✨ 부정적 얘기도 잘 들어주는 대화 상대 <br>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ✨ 개별 사용자에게 맞춘 대화 상대 <br><br>
-: 💚 **AI 가 작성해주는 일기** <br>
+: 💚 **AI 가 작성해주는 일기** <br><br>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ✨ 짧은 시간으로 쓸 수 있는 일기 서비스 <br><br>
-: 💚 **AI 가 추출해주는 감정** <br>
+: 💚 **AI 가 추출해주는 감정** <br><br>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ✨ 부담 없는 감정 정리 서비스<br>
 ### Keywords
 : 채팅 AI와의 커뮤니케이션, 요약 AI의 자동 일기 작성, 감정 분석 시각화
