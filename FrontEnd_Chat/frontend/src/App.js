@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { Angry, Annoyed, Laugh, Smile, Frown, Meh, User, Calendar, Bot, Send, X } from "lucide-react";
 import { Routes, Route, useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Button } from "./components/ui/button";
+import { Button } from "./components/ui/Button";
 import "./App.css";
 import LoginPage from "./Login";
 import DiaryPage from "./Diary";

@@ -2,8 +2,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Angry, Annoyed, Laugh, Smile, Frown, Meh } from "lucide-react";
-import { collection, getDocs, doc, setDoc } from "firebase/firestore";
-import { db } from "./firebase";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "./firebase.js";
 import "./Calendar.css";
 import LineChart from "./LineChart.js";
 
@@ -130,7 +130,7 @@ export default function CalendarPage() {
     const dayDiff = Math.floor((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1;
   
     return { mood: streakMood, days: maxStreak, startDate, endDate, dayDiff };
-  }, [chatLog]);  
+  }, [chatLog, year, month]);  
 
   function formatDate(isoStr) {
     const d = new Date(isoStr);
