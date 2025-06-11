@@ -77,6 +77,35 @@ ewhafallcapston/FrontEnd_Chat/frontend/
 ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=flat&logo=firebase&logoColor=black)
 
 ### 코드 설명
+🌟 **OPEN AI 연결 코드** 
+```
+const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({ model: "gpt-4o", messages: chatHistory })
+      });
+```
+GPT-4o 모델과 연결하는 코드. 사용자의 채팅 기록을 POST 요청으로 보내면, 챗봇의 응답과 함께 생성된 일기와 감정 분석 결과를 받아올 수 있음.
+<br>
+
+🌟 **채팅 내용 저장 코드** 
+```
+const docRef = doc(chatMessagesRef, date);
+const docSnap = await getDoc(docRef);
+
+if (docSnap.exists()) {
+  await updateDoc(docRef, {
+    messages: arrayUnion(message),
+  });
+} else {
+  await setDoc(docRef, { messages });
+}
+```
+Firestore의 chatMessagesByDate 에 채팅 메세지를 날짜별 배열 형식으로 저장하는 코드. 이미 배열이 저장된 날짜라면 새 메시지만 골라서 arrayUnion으로 추가하고, 없으면 새 날짜 배열을 만들어 저장함.
+<br>
 
 ## How to Install
 ### 1. 저장소 Clone
@@ -111,4 +140,6 @@ npm run
 이는 Webpack Dev Server 내부 설정(onBeforeSetupMiddleware, onAfterSetupMiddleware)에서 발생한 사용 중단(Deprecated) 경고로서 오래된 옵션을 사용 중이라는 알림일 뿐, 실행에는 영향을 주지 않으며 Build는 정상적으로 실행됨
 
 ## How to Test
-
+📌  이메일 주소를 이용해 회원가입을 완료한 후, 로그인하여 챗봇과의 대화를 시작한다.<br>
+📌  충분한 대화를 나눈 뒤에는 일기 페이지로 이동하여, AI가 생성한 일기 내용과 감정 분석 결과를 확인한다.<br>
+📌  필요하다면 캘린더 화면으로 이동해 시각적으로 표현된 한 달간의 감정 변화를 점검할 수 있다.
