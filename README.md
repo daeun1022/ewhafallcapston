@@ -43,12 +43,11 @@ AI 챗봇과 대화를 나누며 일기를 작성하는 **ChatBot Diary** 프로
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ✨ AI 감정 분석에 대한 사용자 피드백 기능 <br>
 
 ## 코드 및 구조 설명
+### 프로젝트 구조
 ```
-ewhafallcapston/FrontEnd_Chat/frontend/src/
-│   ├── components/ui                                     
-│   │   ├── button.js                        # Button Component의 구조 정의
-│   │   ├── card.js                          # Card Component의 구조 정의
-│   │   ├── input.js                         # Input Component의 구조 정의
+ewhafallcapston/FrontEnd_Chat/frontend/
+├── .env                                     # OpenAI API Key 저장용 환경 변수 파일
+├── /src
 │   ├── App.js                               # 채팅 화면. AI 챗봇 제공 및 대화 진행
 │   ├── App.css                              # 채팅 화면의 스타일 정의
 │   ├── Calendar.js                          # 캘린더 화면. 일기 화면에서 AI가 추출한 감정들을 모아보고 통계 분석 가능
@@ -66,10 +65,42 @@ ewhafallcapston/FrontEnd_Chat/frontend/src/
 │   ├── SetupTests.js                        # jest-dom 매처를 적용하기 위한 테스트 설정 파일
 │   ├── Signup.js                            # 회원가입 화면. 이메일을 기반으로 한 유저 등록 기능 제공
 │   ├── Signup.css                           # 회원가입 화면의 스타일 정의
-├── .env                                     # OpenAI server 에 연결하기 위한 OpenAPI key 저장
+│   ├── components/ui                                     
+│   │   ├── button.js                        # Button Component의 구조 정의
+│   │   ├── card.js                          # Card Component의 구조 정의
+│   │   ├── input.js                         # Input Component의 구조 정의
 ```
-## How to Build
+
+### 사용기술
+![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=flat&logo=openai&logoColor=white)
+![React](https://img.shields.io/badge/React-61DAFB?style=flat&logo=react&logoColor=black)
+![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=flat&logo=firebase&logoColor=black)
+
+### 코드 설명
 
 ## How to Install
+### 1. 저장소 Clone
+```
+git init
+git clone https://github.com/daeun1022/ewhafallcapston.git
+cd ewhafallcapston/FrontEnd_Chat/frontend
+```
+
+### 2. VSCode에서 패키지 설치
+vs code 실행 후 terminal 창에서 필요한 패키지 설치
+```
+npm install
+```
+
+### 3. OpenAI API Key 설정
+아래와 같은 형식으로 .env 파일을 생성한 후, [OPEN API KEY] 위치에 발급받은 OpenAI API Key를 입력<br>
+※ .env 파일은 src 폴더와 같은 경로(frontend/)에 있어야 정상 작동함
+```
+REACT_APP_OPENAI_API_KEY=[OPEN API KEY]
+```
+
+## How to Build
+
 
 ## How to Test
+
